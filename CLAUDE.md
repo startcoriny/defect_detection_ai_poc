@@ -20,10 +20,10 @@
 
 ## Project Information
 
-- Project:
-- Description:
-- Repository:
-- Environment:
+- Project: 용접 결함 검출 자동 라벨링 AI (Weld Defect Detection Auto-Labeling) — 1단계 Python PoC
+- Description: AI-Hub 용접 검사(RT) 이미지·Polygon 라벨 데이터를 YOLO Detection 형식으로 변환하고, 모델 학습·추론·자동 라벨 생성까지 전체 파이프라인이 실제 데이터에서 동작하는지 검증하는 PoC. 세부 범위는 `docs/context/01-experiment-scope.md` 참조.
+- Repository: https://github.com/startcoriny/defect_detection_ai_poc.git
+- Environment: 로컬 개발 환경(Windows), Python 가상환경, CPU 또는 GPU(CUDA) 겸용
 
 ---
 
@@ -31,44 +31,44 @@
 
 ## Technology Stack
 
-- Language:
-- Framework:
-- Runtime:
-- Package Manager:
-- Database:
-- ORM:
-- Cache:
-- Message Queue:
-- Storage:
-- Infrastructure:
+- Language: Python (버전 미지정, 개발 환경 구성 시 확정 — `docs/context/02-task-list.md` 작업1)
+- Framework: Ultralytics YOLO (YOLO26n Detection, `docs/context/02-task-list.md`/`docs/context/04-experiment-log-template.md` 참조)
+- Runtime: 서버 런타임 없음, PyTorch 기반 로컬/배치 스크립트 실행
+- Package Manager: pip (`requirements.txt`)
+- Database: 없음 (1차 PoC 범위 제외 — `docs/context/01-experiment-scope.md` 9절)
+- ORM: 해당 없음
+- Cache: 해당 없음
+- Message Queue: 해당 없음
+- Storage: 로컬 파일시스템 (`data/raw` 원본, `data/work` 작업용, `data/processed` 변환 결과 — `docs/context/02-task-list.md` 작업2)
+- Infrastructure: 로컬 CPU/GPU 환경, 클라우드·배포 인프라는 1차 PoC 범위 제외
 
 ## Architecture
 
-- Architecture:
-- Directory Structure:
-- Module Strategy:
-- API Style:
+- Architecture: 배치 스크립트 기반 파이프라인 (데이터 분석 → 변환 → 학습 → 추론 → 자동 라벨 생성 → 평가). 서버/API 아키텍처 아님.
+- Directory Structure: `docs/context/03-deliverables.md` 9절 "권장 최종 프로젝트 구조" 참조
+- Module Strategy: `src/` 하위를 역할별로 분리 — `common`(공통 유틸), `data`(데이터 분석), `validation`(검증), `conversion`(라벨 변환), `visualization`(시각화), `dataset`(분할·구성), `model`(학습·추론), `evaluation`(성능 평가). `docs/context/03-deliverables.md` 3절 참조
+- API Style: 해당 없음 (Backend API는 1차 PoC 범위 제외 — `docs/context/01-experiment-scope.md` 9절)
 
 ## Development Configuration
 
 ### Verification
 
-- Format:
-- Lint:
-- Type Check:
-- Test:
-- Build:
+- Format: black
+- Lint: ruff
+- Type Check: 생략 (필요 시 mypy 추가 검토)
+- Test: pytest
+- Build: 별도 빌드 없음 (Python 스크립트 실행 기반)
 
 ### Code Quality
 
-- Formatter:
-- Linter:
-- Static Analysis:
+- Formatter: black
+- Linter: ruff
+- Static Analysis: 생략 (필요 시 mypy 추가 검토)
 
 ### CI/CD
 
-- CI:
-- CD:
+- CI: 미구성 (1차 PoC 범위 제외)
+- CD: 미구성 (모델 배포·운영은 1차 PoC 범위 제외 — `docs/context/01-experiment-scope.md` 9절)
 
 ---
 
@@ -78,9 +78,9 @@
 
 ### Agent Roles
 
-- Planning Agent:
-- Implementation Agent:
-- Review Agent:
+- Planning Agent: Claude
+- Implementation Agent: Codex
+- Review Agent: Claude
 
 ### Agent Rules
 
@@ -101,6 +101,7 @@
 
 - CLAUDE는 구현 계획과 명세를 작성합니다.
 - CODEX는 명세를 기반으로 구현을 수행합니다.
+- CLAUDE는 CODEX의 구현 결과를 리뷰합니다.
 - 각 Agent는 자신의 역할 범위를 벗어나는 작업을 수행하지 않습니다.
 
 ### 구현 요청 처리
@@ -256,17 +257,17 @@ CLAUDE는 구현 지시서를 작성하기 전에 다음 사항을 반드시 확
 
 ## Coding Convention
 
-- Naming Convention:
-- Branch Strategy:
-- Branch Naming:
-- Commit Convention:
-- Code Review:
-- Error Handling:
-- Logging:
-- Authentication:
-- Authorization:
-- File Header:
-- Comment Style:
+- Naming Convention: PEP 8 (함수·변수 snake_case, 클래스 PascalCase, 상수 UPPER_CASE)
+- Branch Strategy: `main` → `dev` → 기능별 브랜치. 기능별 브랜치는 `dev`로 PR 머지하고, `dev`가 안정화되면 `main`으로 머지한다.
+- Branch Naming: `<type>/<설명>` 패턴 (예: `feature/data-inventory`, `fix/polygon-bbox`)
+- Commit Convention: Conventional Commits (아래 "Git Commit Message Rules" 참조)
+- Code Review: Review Agent(Claude) 기준, `docs/rules/review-agent-rule.md` 참조
+- Error Handling: 예외를 삼키지 않고 실패한 파일명·원인을 함께 기록한다 (`docs/context/02-task-list.md` 작업5 원칙 적용)
+- Logging: Python 표준 `logging` 모듈 사용. 실험·실행별 로그는 `experiments/<실험ID>/logs/`에 저장 (`docs/context/04-experiment-log-template.md` 폴더 구조 참조)
+- Authentication: 해당 없음 (1차 PoC 범위 제외 — `docs/context/01-experiment-scope.md` 9절)
+- Authorization: 해당 없음 (1차 PoC 범위 제외 — `docs/context/01-experiment-scope.md` 9절)
+- File Header: `AGENTS.md` 참조
+- Comment Style: `AGENTS.md` 참조
 
 코드 작성 시 지켜야 하는 코딩 규칙, 파일 헤더 규칙, 주석 규칙은 `AGENTS.md`를 참조하세요.
 Implementation Agent(codex)가 자동으로 읽는 문서이며, Review Agent는 코드 리뷰 시 동일한 기준으로 검토합니다.
@@ -277,9 +278,20 @@ Implementation Agent(codex)가 자동으로 읽는 문서이며, Review Agent는
 
 ## Branch Naming Rules
 
-브랜치 이름은 프로젝트에서 정의한 브랜치 네이밍 규칙을 따릅니다.
+브랜치 전략은 `main` → `dev` → 기능별 브랜치 구조를 따릅니다.
 
-프로젝트에 별도 규칙이 없는 경우에는 다음 원칙을 따릅니다.
+- `main`: 배포·안정 브랜치
+- `dev`: 통합 브랜치
+- 기능별 브랜치: `dev`에서 분기하여 작업 후 `dev`로 PR 머지
+- `dev`가 안정화되면 `dev` → `main`으로 머지
+
+브랜치 이름은 `<type>/<설명>` 패턴을 따릅니다.
+
+```
+feature/data-inventory
+fix/polygon-bbox
+docs/experiment-log-template
+```
 
 - 브랜치 이름은 작업 내용을 명확하게 표현합니다.
 - 내부 계획 번호나 임시 식별자는 포함하지 않습니다.
@@ -337,13 +349,13 @@ PR 초안은 사용자에게 먼저 보여주고 승인을 받은 뒤 생성합�
 
 ## Documentation
 
-- Onboarding:
-- Specification:
-- API Documentation:
-- Architecture:
-- Decision:
-- Work Log:
-- Issue Tracker:
+- Onboarding: `docs/onboarding/ai-orchestration.md`
+- Specification: `docs/specs` (1단계 PoC 설계 문서는 `docs/context` 참조)
+- API Documentation: 해당 없음 (API 없음)
+- Architecture: `docs/architecture`
+- Decision: `docs/decisions`
+- Work Log: Notion (`docs/rules/worklog-rules.md` 참조)
+- Issue Tracker: GitHub Issues
 
 ## 문서 관리 규칙
 
@@ -453,14 +465,14 @@ Work Log는 사용자에게 먼저 보여주고 승인을 받은 뒤 NOTION에 �
 
 # 개발 원칙
 
-- Readability:
-- Performance:
-- Security:
-- Testing:
-- Documentation:
+- Readability: 경로·설정값을 코드에 무분별하게 하드코딩하지 않고 설정 파일로 분리 — `docs/context/03-deliverables.md` 3.9절
+- Performance: 1차 PoC에서는 성능 최적화보다 전체 파이프라인 동작 검증을 우선한다 — `docs/context/01-experiment-scope.md` 1절
+- Security: 원본 데이터(`data/raw`)는 코드 실행으로 수정하지 않는다 — `docs/context/02-task-list.md` 작업2. 인증·개인정보 관련 항목은 1차 PoC 범위 제외.
+- Testing: 전체 학습 전 소량 데이터·짧은 Epoch로 Smoke Test를 먼저 수행한다 — `docs/context/02-task-list.md` 작업16
+- Documentation: 실험마다 고유 ID를 부여하고 조건·결과를 기록해 재현 가능하게 한다 — `docs/context/04-experiment-log-template.md`
 
 ---
 
 # 기타
 
-- Notes:
+- Notes: 1단계 PoC의 상세 설계 근거는 `docs/context/README.md`부터 순서대로 확인한다.

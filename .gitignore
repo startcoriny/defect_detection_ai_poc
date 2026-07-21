@@ -1,0 +1,44 @@
+# Python 가상환경 & 캐시
+venv/
+.venv/
+env/
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+.mypy_cache/
+.pytest_cache/
+.ipynb_checkpoints/
+
+# 데이터 (AI-Hub 원본 및 변환 데이터, 용량 크고 코드로 재생성 가능)
+data/
+
+# 모델 가중치
+models/
+*.pt
+*.pth
+*.onnx
+*.engine
+
+# 실험 산출물 중 용량이 큰 부분 (텍스트 기록인 experiment.md / experiment.yaml / *.csv는 유지)
+experiments/*/logs/
+experiments/*/models/
+experiments/*/predictions/
+experiments/*/visualizations/
+experiments/*/errors/
+
+# 추론 / 자동 라벨 / 시각화 산출물 (재생성 가능)
+predictions/
+auto-labels/
+outputs/
+
+# 환경 변수 / 민감 정보
+.env
+*.local
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini

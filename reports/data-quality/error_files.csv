@@ -1,0 +1,5 @@
+image_name,image_path,json_path,error_codes
+VT_ST_02_14598001,data/raw/steel/01.원천데이터/3. VTST/VT_ST_02_14598001.jpg,data/raw/steel/02.라벨링데이터/3. VTST/VT_ST_02_14598001.json,insufficient_points
+VT_ST_02_14599833,data/raw/steel/01.원천데이터/3. VTST/VT_ST_02_14599833.jpg,data/raw/steel/02.라벨링데이터/3. VTST/VT_ST_02_14599833.json,insufficient_points
+VT_ST_02_14600107,data/raw/steel/01.원천데이터/3. VTST/VT_ST_02_14600107.jpg,data/raw/steel/02.라벨링데이터/3. VTST/VT_ST_02_14600107.json,insufficient_points
+VT_ST_02_14600517,data/raw/steel/01.원천데이터/3. VTST/VT_ST_02_14600517.jpg,data/raw/steel/02.라벨링데이터/3. VTST/VT_ST_02_14600517.json,insufficient_points

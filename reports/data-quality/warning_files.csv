@@ -1,0 +1,5 @@
+image_name,image_path,json_path,warning_codes
+RT_AL_00_14483491,data/raw/steel/01.원천데이터/1. RTAL/RT_AL_00_14483491.jpg,data/raw/steel/02.라벨링데이터/1. RTAL/RT_AL_00_14483491.json,negative_coordinate
+VT_ST_06_14623797,data/raw/steel/01.원천데이터/3. VTST/VT_ST_06_14623797.jpg,data/raw/steel/02.라벨링데이터/3. VTST/VT_ST_06_14623797.json,out_of_bounds_coordinate
+VT_ST_06_14625705,data/raw/steel/01.원천데이터/3. VTST/VT_ST_06_14625705.jpg,data/raw/steel/02.라벨링데이터/3. VTST/VT_ST_06_14625705.json,out_of_bounds_coordinate
+VT_ST_06_14625816,data/raw/steel/01.원천데이터/3. VTST/VT_ST_06_14625816.jpg,data/raw/steel/02.라벨링데이터/3. VTST/VT_ST_06_14625816.json,out_of_bounds_coordinate

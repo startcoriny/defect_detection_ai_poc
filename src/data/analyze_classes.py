@@ -37,7 +37,7 @@ STATISTICS_FIELD_NAMES = (
 )
 
 
-# Collect raw class statistics by scanning every source annotation JSON file.
+# 모든 원본 어노테이션 JSON 파일을 순회하여 원본 클래스 통계를 수집합니다.
 def analyze_original_classes() -> list[dict[str, Any]]:
     image_counts: Counter[str] = Counter()
     object_counts: Counter[str] = Counter()
@@ -81,7 +81,7 @@ def analyze_original_classes() -> list[dict[str, Any]]:
     ]
 
 
-# Validate one label document and return its inspection type and non-empty cases.
+# 라벨 문서 하나를 검증하고 검사 유형과 비어 있지 않은 클래스를 반환합니다.
 def extract_classes(label_data: Any) -> tuple[str, list[str]]:
     if not isinstance(label_data, dict):
         raise ValueError("JSON root must be an object")
@@ -110,12 +110,12 @@ def extract_classes(label_data: Any) -> tuple[str, list[str]]:
     return inspection_type, raw_classes
 
 
-# Convert a raw class spelling to the project-standard class name.
+# 원본 클래스 표기를 프로젝트 표준 클래스명으로 변환합니다.
 def normalize_class_name(raw_class: str) -> str:
     return raw_class.lower().replace(" ", "_")
 
 
-# Map every discovered raw spelling while marking normal as non-detectable.
+# 발견된 모든 원본 표기를 매핑하고 normal은 탐지 대상이 아닌 것으로 표시합니다.
 def build_class_mapping(
     original_statistics: list[dict[str, Any]],
 ) -> dict[str, str | None]:
@@ -127,7 +127,7 @@ def build_class_mapping(
     return mapping
 
 
-# Sum raw-class statistics for raw spellings mapped to the same standard class.
+# 같은 표준 클래스에 매핑된 원본 표기의 통계를 합산합니다.
 def build_class_statistics(
     original_statistics: list[dict[str, Any]],
     class_mapping: dict[str, str | None],
@@ -141,7 +141,7 @@ def build_class_statistics(
         for field_name in ORIGINAL_FIELD_NAMES[1:]:
             totals[field_name] += row[field_name]
 
-    # Alphabetical class-name order fixes IDs for every downstream YOLO task.
+    # 클래스명을 알파벳순으로 정렬하여 모든 후속 YOLO 작업의 ID를 고정합니다.
     return [
         {
             "class_id": class_id,
@@ -155,7 +155,7 @@ def build_class_statistics(
     ]
 
 
-# Write the three deterministic class-analysis deliverables.
+# 재현 가능한 클래스 분석 결과물 세 개를 저장합니다.
 def write_results(
     original_statistics: list[dict[str, Any]],
     class_mapping: dict[str, str | None],
@@ -184,7 +184,7 @@ def write_results(
         writer.writerows(class_statistics)
 
 
-# Log class volumes and whether each class occurs in both inspection types.
+# 클래스별 규모와 두 검사 유형 모두에서의 출현 여부를 기록합니다.
 def log_summary(
     original_statistics: list[dict[str, Any]],
     class_statistics: list[dict[str, Any]],
@@ -210,7 +210,7 @@ def log_summary(
         )
 
 
-# Run the complete class-analysis workflow.
+# 전체 클래스 분석 작업을 실행합니다.
 def main() -> int:
     logging.basicConfig(
         level=logging.INFO,

@@ -1,104 +1,101 @@
-# 구현 지시서: Bounding Box를 YOLO Detection 라벨로 변환
+# 구현 지시서: YOLO 라벨 변환 결과 재시각화
 
 ## 배경
 
-`docs/context/02-task-list.md` 작업10(YOLO Detection 라벨 생성)과 `docs/context/03-deliverables.md` 3.5절(`box_to_yolo.py`/`write_yolo_label.py` 역할)에 따라, 작업9에서 생성한 픽셀 좌표 Bounding Box(`metadata/bbox_annotations.csv`)를 YOLO Detection TXT 라벨로 변환한다.
+`docs/context/02-task-list.md` 작업11(변환 결과 재시각화)과 `docs/context/03-deliverables.md` 3.4절(`visualize_yolo_label.py`)·6.3절에 따라, 작업10에서 생성한 YOLO TXT 라벨을 다시 픽셀 좌표로 복원하고 원본 JSON Polygon과 비교해 "픽셀 → 정규화 → 픽셀" 왕복 과정에 오류가 없는지 검증한다.
 
-**대상 범위**: 작업8에서 선별한 `metadata/selected_dataset.csv`의 `selected == True` 이미지 299장 전체(정상 이미지 포함). 이미지·JSON 파일을 다시 열 필요는 없다 — `metadata/bbox_annotations.csv`에 이미 픽셀 좌표와 `image_width`/`image_height`가 들어있으므로 이 CSV만으로 변환한다.
+**대상 범위**: 작업8에서 선별한 `metadata/selected_dataset.csv`의 `selected == True` 이미지 299장 전체(정상 이미지 포함), 표본 추출 없이 전수 검증한다.
 
-**참고**: `docs/context/02-task-list.md` 574번째 줄의 완료 조건 "클래스 번호가 `0` 또는 `1`이다"는 이 프로젝트의 6개 표준 클래스(작업6, `class_id` 0~5) 체계와 맞지 않는 문서상 예시 문구다. `docs/context/03-deliverables.md` 2.5절의 "클래스 번호가 정의 범위 안에 있다"를 실제 완료 조건으로 따른다(아래 완료 기준에 반영).
+**참고**: `docs/context/02-task-list.md` 609줄의 산출물 폴더명은 `outputs/yolo_visualization/`(스네이크케이스)이지만, `docs/context/03-deliverables.md` 6.3절은 같은 산출물을 `outputs/yolo-label-visualization/`(케밥케이스)로 표기한다. 작업7의 `outputs/original-polygon/`, 작업9의 `outputs/polygon-box-comparison/`와 동일하게 케밥케이스 관례를 따라 `outputs/yolo-label-visualization/`을 사용한다.
 
 ## 기능 및 요구사항
 
-### `src/conversion/box_to_yolo.py` (신규)
+### `src/visualization/visualize_yolo_label.py` (신규)
 
-#### 1. 입력
+#### 1. 입력 데이터
 
-- `metadata/selected_dataset.csv`에서 `selected == "True"`인 `image_name` 299건을 대상 목록으로 읽는다.
-- `metadata/bbox_annotations.csv`를 읽어 `image_name` 기준으로 그룹핑한다(정상 이미지는 이 CSV에 행이 없음 — 작업9 결과, 이번 작업 범위에서 재검증하지 않는다).
-- `metadata/class_statistics.csv`를 읽어 `class_id` 오름차순으로 정렬된 클래스 목록을 만든다(0~5, 6개 전부 — 이번 선별 데이터에는 `porosity`/`slag_inclusion`만 등장하지만 클래스 목록 파일은 프로젝트 전체 표준 클래스 6개를 그대로 담는다).
+- `metadata/selected_dataset.csv`에서 `selected == "True"`인 `image_name` 299건.
+- `metadata/raw_dataset_inventory.csv`: `image_path`, `json_path` 조인용.
+- `metadata/bbox_annotations.csv`: 작업9가 계산한 "정답" 픽셀 Box(`annotation_index, class_name, class_id, x_min, y_min, x_max, y_max, image_width, image_height`) — 이번 작업의 비교 기준값으로 그대로 재사용(재계산하지 않음).
+- `outputs/yolo_labels/{image_name}.txt`: 작업10이 생성한 YOLO 정규화 라벨(왕복 검증 대상).
+- 원본 JSON(`json_path`): Polygon 좌표(`annotations[].coordinate.x/y`) — 시각화에 그릴 원본 Polygon과 포함 관계 검증에만 사용.
 
-#### 2. 픽셀 좌표 → YOLO 정규화 좌표 변환
+#### 2. 왕복 복원 및 검증 (이미지별)
 
-`bbox_annotations.csv`의 각 행(`x_min, y_min, x_max, y_max, image_width, image_height, class_id`)마다:
+각 선택된 `image_name`마다:
+
+1. `metadata/bbox_annotations.csv`에서 해당 이미지의 행을 `annotation_index` 오름차순으로 정렬해 `expected` 목록으로 둔다.
+2. `outputs/yolo_labels/{image_name}.txt`를 읽는다. **파일이 없으면** `reason="label_file_missing"`으로 기록하고 해당 이미지는 이후 단계를 건너뛴다(이미지·라벨 연결 오류 검증).
+3. `len(expected) != 파일의 줄 수`이면 `reason="object_count_mismatch"`로 기록한다(객체 수 일치 검증). 이후 단계는 `min(len(expected), 줄 수)`까지만 비교한다.
+4. 각 줄(`class_id cx cy w h`)을 `expected`의 같은 순번과 비교한다(같은 `annotation_index` 순서로 생성됐으므로 순번이 곧 대응 관계):
+   - 픽셀 복원: `x_min = (cx - w/2) * image_width`, `x_max = (cx + w/2) * image_width`, `y_min`/`y_max`도 동일하게(`image_width`/`image_height`는 `expected`의 값 재사용).
+   - `class_id`가 다르면 `reason="class_mismatch"`.
+   - 좌표 반올림 오차: `max(|복원 x_min - expected x_min|, |복원 y_min - expected y_min|, |복원 x_max - expected x_max|, |복원 y_max - expected y_max|)`가 **0.5px 초과**면 `reason="coordinate_rounding_error_exceeded"`(YOLO 포맷이 소수점 6자리를 쓰므로 정상적으로는 발생하지 않아야 함).
+   - Box 포함 관계: 원본 JSON에서 같은 `annotation_index`의 `coordinate.x`/`coordinate.y` 점들이 전부 `[복원 x_min - 0.5, 복원 x_max + 0.5] × [복원 y_min - 0.5, 복원 y_max + 0.5]` 안에 있는지 확인 — 벗어나면 `reason="polygon_not_contained"`.
+5. 정상 이미지(=이번 이미지에 `expected` 행이 없음): 라벨 파일이 존재하고 **빈 파일**인지만 확인, 다르면 `reason="normal_image_label_not_empty"`.
+
+#### 3. 시각화 (299장 전체, 표본 추출 없음)
+
+- 원본 이미지를 읽어(`src/common/image_utils.read_image`), 원본 Polygon(얇은 폴리라인)과 **YOLO 라벨에서 복원한 Box**(굵은 사각형, 작업9와 다른 색)를 함께 그린다 — 정답 `bbox_annotations.csv`의 Box가 아니라 **왕복 복원값**을 그려야 이번 검증의 의미가 있다.
+- 클래스명(`expected`의 `class_name` 재사용)을 Box 근처에 표시.
+- 파일명·이미지 크기를 좌상단에 표시.
+- 정상 이미지는 Polygon/Box 없이 원본 이미지만 저장(작업7·9와 동일 관례).
+- 저장: `cv2.imencode(".jpg", image)` + `Path.write_bytes(...)`(한글 경로 우회, 기존 패턴 재사용).
+- 저장 위치: `outputs/yolo-label-visualization/{image_name}.jpg`
+
+#### 4. 산출물
+
+`metadata/yolo_roundtrip_mismatches.csv`, 컬럼:
 
 ```
-center_x = (x_min + x_max) / 2 / image_width
-center_y = (y_min + y_max) / 2 / image_height
-box_width = (x_max - x_min) / image_width
-box_height = (y_max - y_min) / image_height
+image_name, annotation_index, reason
 ```
 
-한 줄 형식: `f"{class_id} {center_x:.6f} {center_y:.6f} {box_width:.6f} {box_height:.6f}"`
-
-- 계산된 4개 정규화 값이 모두 `0.0 이상 1.0 이하` 범위인지 확인한다. 벗어나면 작업9의 클리핑이 깨진 것이므로(정상적으로는 발생 불가) `ValueError`를 발생시켜 실패로 처리한다(조용히 무시하지 않는다).
-
-#### 3. 이미지별 TXT 라벨 생성
-
-- 선별된 299개 `image_name` 전체에 대해 `{image_name}.txt` 파일을 만든다.
-- 해당 이미지에 `bbox_annotations.csv` 행이 있으면 객체당 한 줄씩 기록(순서는 `annotation_index` 오름차순).
-- 해당 이미지에 행이 없으면(정상 이미지) **빈 파일**을 만든다.
-- 저장 위치: `outputs/yolo_labels/{image_name}.txt` (작업7·9와 동일하게 `outputs/`는 재생성 가능한 산출물 디렉터리).
-- 파일 인코딩: UTF-8, 줄바꿈 `\n`, 마지막 줄 개행 포함.
-
-#### 4. 클래스 매핑 파일
-
-- `metadata/yolo_classes.txt` 생성: `class_id` 오름차순으로 한 줄에 클래스명 하나씩(YOLO/Ultralytics 관례상 줄 번호 = `class_id`).
+(`annotation_index`는 해당 안 되는 경우—예: `label_file_missing`, `object_count_mismatch`, `normal_image_label_not_empty`—빈 문자열로 남긴다.)
 
 #### 5. 로그 출력
 
-`logging`으로 다음을 남긴다:
-
-- 대상 이미지 수(299)
-- 생성된 라벨 파일 수(299 — 정상 이미지 포함 전부)
-- 빈 라벨(정상 이미지) 수
-- 객체가 있는 라벨 파일 수
-- 전체 객체 수(YOLO 라인 총수, 작업9의 439와 일치해야 함)
-- 클래스별 객체 수
+`logging`으로: 대상 이미지 수(299), 검증한 객체 쌍 수, 발견된 불일치 건수(사유별), 관측된 최대 좌표 오차(px), 전체 통과 여부(불일치 0건이면 "PASS").
 
 ## 구현 범위 (In Scope)
 
-- `src/conversion/box_to_yolo.py` 신규 생성
-- `metadata/yolo_classes.txt`, `outputs/yolo_labels/*.txt`는 스크립트 실행 결과물 — CODEX가 미리 만들지 않는다.
+- `src/visualization/visualize_yolo_label.py` 신규 생성
 
 ## 구현 제외 범위 (Out of Scope)
 
-- `convert_aihub_to_yolo.py`, `write_yolo_label.py`를 별도 파일로 분리하는 것 — 작업7·9와 동일하게 한 작업은 한 스크립트로 구현하는 기존 관례를 따른다(파일을 나누지 않는다).
-- `split_dataset.py`, `build_yolo_dataset.py` — Train/Validation/Test 분할과 `data/processed/dataset_v1/` 폴더 구조 생성은 작업13·작업14 범위다. 이번 작업은 분할 없이 299장 전체를 대상으로 라벨만 생성한다.
-- `validate_yolo_dataset.py`(작업10 산출물 최종 검사) — 작업15 범위.
-- 이미지 파일 복사/이동 — 이번 작업은 라벨 텍스트 파일만 생성한다.
+- `analyze_statistics.py`(작업12 데이터셋 통계) — 이번 작업 범위 아님.
+- `bbox_annotations.csv`/`outputs/yolo_labels/` 재계산 — 두 산출물 모두 기존 값을 읽기만 한다.
+- VT/ST 데이터나 작업8에서 제외된 이미지 처리.
 
 ## 작업 전 반드시 확인해야 하는 문서
 
-- `docs/context/02-task-list.md` 536~578줄(작업10: 수행 작업, 파일 규칙, 산출물, 완료 조건)
-- `docs/context/03-deliverables.md` 175~211줄(2.5 변환된 YOLO Detection 데이터셋), 336~354줄(3.5 변환 코드)
-- `metadata/bbox_annotations.csv`, `metadata/selected_dataset.csv`, `metadata/class_statistics.csv` — 그대로 재사용
-- `src/conversion/polygon_to_box.py` — CSV 로딩/조인 패턴 재사용
+- `docs/context/02-task-list.md` 581~623줄(작업11: 수행 작업, 확인할 내용, 산출물, 완료 조건)
+- `docs/context/03-deliverables.md` 713~724줄(6.3 YOLO 라벨 재시각화)
+- `metadata/selected_dataset.csv`, `metadata/raw_dataset_inventory.csv`, `metadata/bbox_annotations.csv`, `outputs/yolo_labels/*.txt` — 그대로 재사용
+- `src/conversion/polygon_to_box.py`의 `draw_comparison`/`save_image` — Polygon·Box 시각화·한글 경로 저장 패턴 재사용
+- `src/common/image_utils.py`, `src/common/json_utils.py`
 
 ## 완료 기준 (Definition of Done)
 
-- ( ) 모든 좌표가 `0~1` 범위다.
-- ( ) 클래스 번호가 정의된 범위(0~5) 안에 있다.
-- ( ) 객체당 한 줄로 저장된다.
-- ( ) 이미지와 라벨 파일명이 일치한다(확장자만 다름).
-- ( ) 정상 이미지의 라벨이 빈 파일로 생성된다.
-- ( ) 전체 객체 수(YOLO 라인 총수)가 작업9의 439건과 일치한다.
-- ( ) 재실행해도 동일한 결과가 나온다(재현성 — 무작위 요소 없음).
+- ( ) 원본 객체 수(=`bbox_annotations.csv` 기준)와 YOLO 라벨의 객체 수가 이미지별로 일치한다.
+- ( ) 클래스(`class_id`)가 변하지 않는다.
+- ( ) 복원한 Box가 원본 Polygon을 포함한다.
+- ( ) 이미지·라벨 파일 연결 오류가 없다(299장 전부 라벨 파일 존재).
+- ( ) 샘플이 아니라 299장/439객체 전체가 검증된다.
+- ( ) 좌표 반올림 오차가 관측되면 정량적으로 기록된다(0.5px 초과 시 불일치로 기록).
 - ( ) 코드가 PEP 8 / black 포맷을 따른다.
 
 ## 제약사항
 
-- 표준 라이브러리(`csv`, `logging`, `pathlib`) + 기존 `src/common/*` 유틸만 사용한다. 이미지/JSON을 다시 읽지 않으므로 `opencv-python`이 필요 없다면 추가하지 않는다.
-- `metadata/`, `outputs/` 아래 기존 파일(작업9 산출물 등)은 읽기만 하고 수정하지 않는다.
+- 표준 라이브러리(`csv`, `json`, `logging`, `pathlib`) + `opencv-python`, `numpy` + 기존 `src/common/*` 유틸만 사용한다.
+- `metadata/`, `outputs/yolo_labels/` 아래 기존 파일은 읽기만 하고 수정하지 않는다.
 - 함수/모듈 주석은 한글로 작성한다(프로젝트 관례).
 
 ## 테스트 방법 및 검증 기준 (CODEX 완료 후 CLAUDE가 이어서 수행)
 
-1. `venv/Scripts/python.exe src/conversion/box_to_yolo.py` 실행
-2. `outputs/yolo_labels/` 파일 수가 299개인지 확인
-3. 정상 이미지로 알려진 파일(예: `RT_AL_00_14483440.txt`)이 빈 파일인지 확인
-4. `outputs/yolo_labels/*.txt`의 전체 줄 수 합이 439와 일치하는지 확인
-5. 임의의 몇 개 라벨 파일을 열어 좌표를 역산(픽셀 복원)해 `bbox_annotations.csv` 원본 값과 비교
-6. `metadata/yolo_classes.txt`가 6줄이고 순서가 `class_statistics.csv`의 `class_id` 순서와 같은지 확인
-7. 재실행 후 `outputs/yolo_labels/`와 `metadata/yolo_classes.txt`가 동일한지 확인
-8. `docs/context/02-task-list.md` 작업10 완료 조건 충족 여부 확인(단, 클래스 번호 조건은 위 "완료 기준"에 명시한 대로 0~5 범위로 판단)
+1. `venv/Scripts/python.exe src/visualization/visualize_yolo_label.py` 실행 — 로그 마지막 줄에서 불일치 0건("PASS") 확인
+2. `metadata/yolo_roundtrip_mismatches.csv`가 헤더만 있는지(0건) 확인
+3. `outputs/yolo-label-visualization/` 299장 생성 확인
+4. 다중 객체 이미지(`RT_AL_02_14489189.jpg`), 폭넓은 단일 객체(`RT_AL_02_14483871.jpg`), 정상 이미지(`RT_AL_00_14483440.jpg`) 육안 확인 — 복원된 Box가 원본 Polygon을 포함하는지
+5. 재실행 후 `metadata/yolo_roundtrip_mismatches.csv`가 동일한지 확인
+6. `docs/context/02-task-list.md` 작업11 완료 조건 충족 여부 확인

@@ -1,94 +1,118 @@
-# 구현 지시서: 원본 Polygon 시각화
+# 구현 지시서: 1차 PoC 데이터 선별
 
 ## 배경
 
-`docs/context/02-task-list.md` 작업7(원본 Polygon 시각화)과 `docs/context/03-deliverables.md` 3.4절·6.1절에 따라, 원본 JSON의 Polygon 좌표를 이미지 위에 그려서 라벨 품질을 육안으로 확인할 수 있게 한다.
+`docs/context/02-task-list.md` 작업8(1차 PoC 데이터 선별)과 `docs/context/03-deliverables.md` 2.4절에 따라, RT·AL 데이터 중 정상/`porosity`/`slag_inclusion` 이미지를 각각 약 100장씩 선별한다.
 
-전체 2,250장을 다 그리는 대신, 클래스별로 정해진 수량만 뽑아 시각화한다. 다만 무작위 표본만으로는 완료 조건에 있는 "여러 객체가 각각 표시된다", "이미지 경계를 벗어난 Polygon을 발견할 수 있다"를 보장할 수 없으므로, 이미 만들어져 있는 `metadata/raw_dataset_inventory.csv`와 `reports/data-quality/warning_files.csv`를 참고해 해당 사례를 표본에 강제로 포함시킨다.
+이미 계산해 둔 실제 후보 수(재사용할 `metadata/raw_dataset_inventory.csv`, `metadata/class_mapping.json`, `reports/data-quality/data_quality_report.csv` 기준):
+
+- RT+AL 전체: 637장 (전부 `valid==True`, 전부 품질검사 `include==True` — 이 두 필터로 걸러지는 이미지는 이번 데이터셋엔 없지만 코드는 일반적으로 처리해야 함)
+- 정상: 225장
+- `porosity`만 있음: 222장
+- `slag_inclusion`만 있음: 119장
+- `porosity`와 `slag_inclusion`이 둘 다 있고 다른 클래스는 없음: 1장 (`복수 클래스 이미지 처리` 대상)
+- 대상 클래스(`porosity`/`slag_inclusion`) + 대상 외 클래스가 섞임: 2장 (`crack`+`porosity` 등 — 1차 PoC에서는 제외 대상)
+- 그 외 대상 외 클래스만 있음(`crack`만 38장, `lack_of_fusion`만 30장 등): 68장 (대상과 무관해 제외)
 
 ## 기능 및 요구사항
 
-### `src/visualization/visualize_original_polygon.py` (신규)
+### `src/dataset/select_poc_dataset.py` (신규)
 
-#### 1. 표본 선정
+#### 1. 후보 구성
 
-- 입력: `metadata/raw_dataset_inventory.csv` (재사용 — `image_path`, `json_path`, `status`, `classes`, `num_annotations`, `valid` 컬럼 사용. `classes`는 세미콜론(`;`)으로 구분된 원본 case 값 목록이다).
-- `valid == True`인 레코드만 대상으로 한다.
-- 클래스별 표본: `status == "normal"` 레코드에서 50장, 그리고 `metadata/class_mapping.json`의 6개 표준 클래스 각각에 대해 — 원본 `classes` 값을 `class_mapping.json`으로 표준명으로 바꿨을 때 그 표준 클래스를 포함하는 레코드 중 50장. 뽑을 때는 `random.Random(42)`로 고정 시드를 사용해 재실행해도 같은 표본이 나오게 한다 (표준 라이브러리 `random`만 사용, 새 패키지 추가 금지).
-- 강제 포함 표본(위에서 이미 뽑혔으면 중복 추가하지 않음):
-  - `num_annotations`가 가장 큰 레코드 1개 (복수 객체 확인용).
-  - `reports/data-quality/warning_files.csv`에서 `warning_codes`에 `out_of_bounds_coordinate` 또는 `negative_coordinate`가 포함된 레코드 전부 (이미지 경계를 벗어난 Polygon 확인용, 이 파일 기준 3~4건).
-- 최종 표본 목록(중복 제거 후 image_name 기준 정렬)을 로그로 남긴다 (클래스별/강제포함 몇 장씩 뽑혔는지 포함).
+- `metadata/raw_dataset_inventory.csv`에서 `inspection_type == "RT"` 그리고 `material == "AL"`인 레코드만 후보로 삼는다 (그 외 레코드는 애초에 후보 목록에도 넣지 않는다 — VT/ST 데이터까지 나열해 표를 부풀리지 않는다).
+- 각 후보의 원본 `classes`(세미콜론 구분)를 `metadata/class_mapping.json`으로 표준 클래스 집합으로 바꾼다(`normal`은 매핑값이 `null`이라 제외됨 — 정상 이미지의 클래스 집합은 빈 집합이 된다).
+- `reports/data-quality/data_quality_report.csv`를 `image_name` 기준으로 조인해 `include` 컬럼(품질검사 통과 여부)과 `warning_codes`(중복 탐지용, `duplicate_filename`/`duplicate_image` 포함 여부)를 가져온다.
 
-#### 2. 시각화
+#### 2. 그룹 분류와 제외 사유
 
-표본으로 뽑힌 각 이미지에 대해:
+각 후보를 아래 우선순위로 하나의 상태로 분류한다 (먼저 해당하는 조건 하나만 적용):
 
-- `src/common/image_utils.read_image`로 이미지를 읽는다 (한글 경로 대응, 실패 시 `logging.error`로 남기고 건너뛴다 — 크래시 금지).
-- 같은 이미지의 JSON을 `src/common/json_utils.load_json`으로 읽어 `annotations[]`를 순회한다.
-- 각 annotation의 Polygon(`coordinate.x`, `coordinate.y` 배열)을 OpenCV로 그린다:
-  - 경계선: 채워지지 않은 폴리라인 (`cv2.polylines`).
-  - 반투명 내부 영역: 별도 오버레이 이미지에 `cv2.fillPoly`로 채운 뒤 `cv2.addWeighted`로 원본과 합성 (투명도는 상수로 고정, 예: `alpha = 0.3`).
-  - `case`가 빈 문자열이면(`정상` annotation) 폴리곤을 그리지 않고 건너뛴다.
-  - `class_mapping.json`으로 변환한 표준 클래스명 + 객체 번호(해당 이미지 내 annotation 순번, 0부터)를 폴리곤 근처(첫 좌표 위치)에 `cv2.putText`로 표시한다.
-- 이미지 좌상단에 파일명과 `f"{width}x{height}"` 크기를 `cv2.putText`로 표시한다 (`width`/`height`는 JSON의 `image_data`에서 읽는다).
-- 결과를 `outputs/original-polygon/{image_name}.jpg`로 저장한다 (`cv2.imwrite`가 한글 경로에서 실패할 수 있으므로 `cv2.imencode` + `Path.write_bytes`로 저장 — `data/raw`의 한글 경로 이슈와 동일한 종류의 문제이니 같은 패턴으로 우회한다).
+1. `valid != True` → `exclusion_reason = "image_or_json_missing"`
+2. `include != True` (품질검사 미통과) → `exclusion_reason = "quality_check_failed"`
+3. `warning_codes`에 `duplicate_filename` 또는 `duplicate_image`가 있음 → `exclusion_reason = "duplicate"`
+4. 표준 클래스 집합이 `{"porosity", "slag_inclusion"}`의 부분집합이 아니면서(즉 대상 외 클래스가 하나라도 섞여 있으면서) `porosity`/`slag_inclusion` 중 하나라도 포함 → `exclusion_reason = "off_target_class_present"` (완료 조건의 "대상 외 결함이 섞인 데이터 처리 기준" — 1차 PoC에서는 제외하는 쪽으로 처리)
+5. `status == "normal"` → `group = "normal"`
+6. 표준 클래스 집합이 `{"porosity"}` → `group = "porosity"`
+7. 표준 클래스 집합이 `{"slag_inclusion"}` → `group = "slag_inclusion"`
+8. 표준 클래스 집합이 `{"porosity", "slag_inclusion"}` (둘 다, 다른 클래스 없음) → `group = "both"`
+9. 그 외(대상 클래스가 전혀 없는 다른 단일/복합 결함) → `exclusion_reason = "non_target_class"`
 
-#### 3. 좌표 검증
+1~4, 9번에 해당하면 `selected = False`로 확정하고 아래 5번 표본 추출 대상에서 제외한다.
 
-폴리곤을 그리기 전, 각 annotation에 대해 아래를 확인하고 위반 시 `logging.warning`으로 남긴다 (`reports/data-quality/`의 검증 결과와 별개로, 이번 시각화 스크립트 자체의 판단):
+#### 3. 표본 추출 (그룹 5~8에 해당하는, 아직 `exclusion_reason`이 없는 후보만 대상)
 
-- 좌표 개수 불일치(`len(x) != len(y)`) — 있으면 해당 annotation은 그리지 않고 건너뛴다.
-- 좌표가 이미지 `width`/`height` 범위를 벗어남 — 그리기는 하되(잘리더라도 OpenCV가 처리) 경고 로그를 남긴다.
+- `TARGET_COUNT = 100` (상수로 선언).
+- `random.Random(42)`로 고정 시드 사용.
+- `both` 그룹(1장)은 항상 선택한다(`selected = True`) — "복수 클래스 이미지도 포함할 수 있다"는 요구사항을 실제로 확인 가능하게 만들기 위해 강제 포함한다.
+- `normal` 그룹: `image_name` 기준 정렬 후 `min(TARGET_COUNT, len(그룹))`개를 무작위 추출해 `selected = True`, 나머지는 `selected = False`, `exclusion_reason = "quota_not_selected"`.
+- `porosity` 그룹: `both`가 이미 1장을 채우므로 `porosity`(순수) 그룹에서 `min(TARGET_COUNT - 1, len(그룹))`개를 무작위 추출해 `selected = True`, 나머지는 `quota_not_selected`.
+- `slag_inclusion` 그룹도 동일하게 `min(TARGET_COUNT - 1, len(그룹))`개 추출.
+- 선택 안 된 나머지(그룹 5~8 중 표본에서 빠진 것)는 `selected = False`, `exclusion_reason = "quota_not_selected"`.
 
-이 검증에서 발견한 문제를 `outputs/original-polygon/coordinate_check.csv`에 기록한다. 컬럼: `image_name, annotation_index, issue`.
+#### 4. 산출물
 
-#### 4. 오류 이미지 목록
+`metadata/selected_dataset.csv` (전체 RT+AL 후보 637건, 선택/제외 모두 포함), 컬럼:
 
-이미지 읽기 실패, JSON 파싱 실패 등으로 시각화를 건너뛴 이미지를 `outputs/original-polygon/error_files.csv`에 기록한다. 컬럼: `image_name, reason`.
+```
+image_name, status, classes, object_count, group, selected, exclusion_reason, duplicate, quality_status, split_group
+```
+
+- `classes`: 표준 클래스 세미콜론 join (정상이면 빈 문자열)
+- `object_count`: `raw_dataset_inventory.csv`의 `num_annotations` 그대로
+- `group`: 위 2절에서 정한 그룹(`normal`/`porosity`/`slag_inclusion`/`both`/`excluded`) — 제외 사유가 있으면 `"excluded"`
+- `duplicate`: `True`/`False`
+- `quality_status`: `include` 값을 그대로 `"pass"`/`"fail"` 문자열로
+- `split_group`: 항상 빈 문자열(추후 `split_dataset.py`가 채울 자리, 이번 작업 범위 아님)
+
+`metadata/included_files.txt`: `selected == True`인 `image_name`을 한 줄에 하나씩, 정렬해서.
+
+`metadata/excluded_files.txt`: `selected == False`인 후보를 `image_name,exclusion_reason` 형식으로 한 줄에 하나씩(헤더 없이), `image_name` 기준 정렬.
+
+#### 5. 로그 출력
+
+`logging`으로 아래를 남긴다: 후보 총원(637), 그룹별 전체 인원과 선택된 인원(`normal`/`porosity`/`slag_inclusion`/`both`), 그룹별 계획 수량(100) 대비 실제 선택 수량 차이, `exclusion_reason`별 건수, 선택된 이미지들의 그룹별 `object_count` 합계(클래스별 이미지·객체 수 요구사항).
 
 ## 구현 범위 (In Scope)
 
-- `src/visualization/visualize_original_polygon.py` 신규 생성
-- `outputs/original-polygon/*.jpg`, `coordinate_check.csv`, `error_files.csv`는 스크립트 실행 결과물 — CODEX가 미리 만들지 않는다.
-- `src/visualization/__init__.py`가 없다면 함께 생성한다 (다른 `src/*` 하위 패키지와의 일관성 확인 후, 없는 패턴이면 만들지 않아도 됨 — 기존 `src/data/`, `src/validation/` 디렉터리에 `__init__.py`가 있는지 먼저 확인하고 그 관례를 따른다).
+- `src/dataset/select_poc_dataset.py` 신규 생성
+- `metadata/selected_dataset.csv`, `metadata/included_files.txt`, `metadata/excluded_files.txt`는 스크립트 실행 결과물 — CODEX가 미리 만들지 않는다.
 
 ## 구현 제외 범위 (Out of Scope)
 
-- `visualize_polygon_box.py`, `visualize_yolo_label.py`, `visualize_prediction.py`, `visualize_evaluation.py` — 이후 작업 범위.
-- "작은 결함 이미지", "경계가 복잡한 이미지" 표본을 자동으로 판별하는 로직 — 기하학적 복잡도·면적 계산은 이번 작업 범위가 아니다. 무작위 표본(클래스별 10장, 다수 annotation 존재로 자연히 다양한 크기가 섞임) 안에서 CLAUDE가 육안으로 확인한다.
-- 전체 2,250장 시각화 — 위 표본 선정 로직대로만 생성한다.
-- `src/common/image_utils.py`의 영문 주석 수정 — 이번 작업과 무관한 기존 파일이므로 손대지 않는다.
+- `split_dataset.py`, `build_yolo_dataset.py`, `verify_split.py` — 이후 작업 범위.
+- `split_group` 값 실제 배정 — 이번 작업은 컬럼만 만들고 빈 값으로 둔다.
+- VT/ST 데이터에 대한 어떤 처리도 하지 않는다 (후보 목록 자체가 RT+AL로 한정됨).
+- `reports/dataset/` 아래 통계 파일(`dataset_summary.csv` 등) — 이후 작업(데이터셋 통계) 범위.
 
 ## 작업 전 반드시 확인해야 하는 문서
 
-- `docs/context/02-task-list.md` 379~421줄 (작업7: 수행 작업, 최소 확인 대상, 산출물, 완료 조건)
-- `docs/context/03-deliverables.md` 315~333줄(3.4 시각화 코드), 680~696줄(6.1 원본 Polygon 시각화)
-- `docs/raw_data_structure.md` (JSON 스키마, `coordinate.x`/`y` 형식, `annotations[].case`)
-- `metadata/raw_dataset_inventory.csv`, `metadata/class_mapping.json`, `reports/data-quality/warning_files.csv` — 표본 선정에 그대로 재사용
-- `src/common/image_utils.py`, `src/common/json_utils.py` — 기존 유틸 재사용
+- `docs/context/02-task-list.md` 424~490줄 (작업8: 수행 작업, 복수 클래스 이미지 처리, 산출물, 완료 조건)
+- `docs/context/03-deliverables.md` 140~172줄(2.4 1차 PoC 선정 데이터 목록)
+- `metadata/raw_dataset_inventory.csv`, `metadata/class_mapping.json`, `reports/data-quality/data_quality_report.csv` — 그대로 재사용(재스캔하지 않음)
 
 ## 완료 기준 (Definition of Done)
 
-- ( ) Polygon이 실제 결함 위치에 표시된다.
-- ( ) 클래스명이 올바르게 표시된다.
-- ( ) 여러 객체가 각각 표시된 이미지가 최소 1건 포함된다 (`num_annotations` 최댓값 이미지).
-- ( ) 이미지 경계를 벗어난 Polygon 사례가 최소 1건 포함된다 (`warning_files.csv`의 `out_of_bounds_coordinate`/`negative_coordinate` 이미지).
-- ( ) 정상 이미지, 6개 표준 클래스 이미지가 각각 최소 1장씩 포함된다.
-- ( ) 재실행해도 동일한 표본·결과가 나온다 (고정 시드 재현성).
+- ( ) `metadata/selected_dataset.csv`에 RT·AL 데이터만 포함된다(637행).
+- ( ) `selected == True`인 행은 `porosity`/`slag_inclusion`만 대상 클래스로 갖거나 정상이다.
+- ( ) 대상 외 결함이 섞인 데이터가 `off_target_class_present` 사유로 제외 처리된다(2건).
+- ( ) 정상·`porosity`·`slag_inclusion` 이미지가 각각 선별된다.
+- ( ) 그룹별 계획 수량(100)과 실제 선택 수량의 차이가 로그와 `selected_dataset.csv`로 확인 가능하다.
+- ( ) 재실행해도 동일한 선택 결과가 나온다(고정 시드 재현성).
 - ( ) 코드가 PEP 8 / black 포맷을 따른다.
 
 ## 제약사항
 
-- 표준 라이브러리(`csv`, `json`, `logging`, `random`, `pathlib`) + `opencv-python`, `numpy` + 기존 `src/common/*` 유틸만 사용한다. 새 외부 패키지를 추가하지 않는다.
-- `data/raw`, `metadata/`, `reports/` 아래 기존 파일은 읽기만 하고 수정하지 않는다.
-- 함수/모듈 주석은 한글로 작성한다 (프로젝트 관례).
+- 표준 라이브러리(`csv`, `json`, `logging`, `random`, `pathlib`) 외 새 패키지를 추가하지 않는다.
+- `metadata/raw_dataset_inventory.csv`, `class_mapping.json`, `reports/data-quality/data_quality_report.csv`를 그대로 재사용하고 원본 JSON을 다시 스캔하지 않는다.
+- 함수/모듈 주석은 한글로 작성한다(프로젝트 관례).
 
 ## 테스트 방법 및 검증 기준 (CODEX 완료 후 CLAUDE가 이어서 수행)
 
-1. `venv/Scripts/python.exe src/visualization/visualize_original_polygon.py` 실행
-2. `outputs/original-polygon/`에 이미지가 생성됐는지, 개수가 로그에 남긴 표본 수와 일치하는지 확인
-3. 생성된 이미지 중 정상/6개 클래스/다수 객체/경계 초과 사례를 직접 열어 육안으로 확인 (Polygon 위치, 클래스명 표시, 파일명·크기 표시)
-4. `coordinate_check.csv`, `error_files.csv` 내용 확인
-5. 재실행 후 표본과 결과가 동일한지 확인
-6. `docs/context/02-task-list.md` 작업7 완료 조건 5개 충족 여부 확인
+1. `venv/Scripts/python.exe src/dataset/select_poc_dataset.py` 실행
+2. `metadata/selected_dataset.csv` 총 행 수가 637인지, `selected_dataset.csv`의 그룹별 `selected==True` 건수가 로그와 일치하는지 확인
+3. `both` 그룹(1건)이 항상 `selected==True`인지 확인
+4. `off_target_class_present` 사유 건수가 2건인지 확인
+5. `included_files.txt`/`excluded_files.txt` 줄 수 합이 637인지 확인
+6. 재실행 후 선택 결과 동일한지 확인
+7. `docs/context/02-task-list.md` 작업8 완료 조건 5개 충족 여부 확인

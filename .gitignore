@@ -36,6 +36,9 @@ outputs/
 .env
 *.local
 
+# Codex CLI 로컬 아티팩트
+.agents/
+
 # IDE / OS
 .vscode/
 .idea/

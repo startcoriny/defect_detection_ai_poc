@@ -1,0 +1,21 @@
+System Information
+  Python : 3.13.14
+  OS     : Windows-11-10.0.26200-SP0
+  CPU    : Intel64 Family 6 Model 198 Stepping 2, GenuineIntel
+  RAM    : 31.46 GiB
+
+Package Imports
+  torch       : SUCCESS (2.13.0+cpu)
+  ultralytics : SUCCESS (8.4.104)
+  cv2         : SUCCESS (5.0.0)
+  numpy       : SUCCESS (2.5.1)
+  pandas      : SUCCESS (3.0.3)
+  matplotlib  : SUCCESS (3.11.1)
+  yaml        : SUCCESS (6.0.3)
+
+Compute Device
+  CUDA Available : No
+  Device         : CPU
+
+Pretrained Model
+  yolo26n.pt: SUCCESS

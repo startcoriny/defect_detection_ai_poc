@@ -76,3 +76,16 @@ CODEX 샌드박스는 한글 사용자 경로 문제로 `venv`를 못 읽어 `bl
 - **새 기능 구현**: 항상 `agent_work/prompt.md`에 구현 지시서를 먼저 작성하고, 사용자 승인 후 `codex exec`로 전달합니다 (`CLAUDE.md` 구현 지시서 작성 규칙 그대로 적용).
 - **리뷰에서 나온 scoped fix**: `agent_work/review.md`에 문제와 수정 방향이 이미 구체적으로 적혀 있다면, `prompt.md`를 다시 쓰지 않고 그 내용을 근거로 `codex exec`에 바로 지시문을 넣어 전달해도 됩니다. review.md 자체가 이미 범위가 명확한 지시서 역할을 하기 때문입니다.
 - 새 기능과 무관하게 범위가 불명확하거나 review.md에 없는 새로운 요구사항이 섞여 있다면, scoped fix로 보지 않고 `prompt.md`를 다시 작성합니다.
+
+---
+
+## AI 전용 md 파일 수정은 별도 브랜치·PR을 만들지 않는다
+
+`docs/rules/*.md`, `docs/onboarding/ai-orchestration.md`, `CLAUDE.md`, `AGENTS.md`처럼 AI(CLAUDE/CODEX)가 스스로 어떻게 동작할지를 정하는 문서는, 수정할 때마다 새 브랜치를 파고 PR을 올리지 않습니다. 대신 그 시점에 진행 중이거나 다음으로 시작할 실제 작업 브랜치에 그 변경을 함께 실어서 커밋·PR합니다.
+
+- 진행 중인 작업 브랜치가 있으면 그 브랜치에 바로 커밋합니다.
+- 지금 활성 작업 브랜치가 없으면, 워킹 디렉터리에 변경 사항만 남겨두고(커밋하지 않음) 다음 작업 브랜치를 만들 때 그 변경을 함께 커밋합니다.
+
+이 예외는 **AI 전용 프로세스/규칙 문서**에만 해당합니다. `docs/context/`, `docs/data-inventory.md`, `docs/raw_data_structure.md`, `docs/decisions/`, `docs/specs/` 등 프로젝트 자체의 내용(데이터, 설계, 의사결정)을 다루는 문서는 기존 규칙대로 별도 브랜치·PR을 거칩니다.
+
+이유: `docs/rules/review-agent-rule.md`, `worklog-rules.md` 같은 문서는 지난 세션에서 짧은 시간 안에 여러 번 고쳐야 했는데, 매번 별도 브랜치·PR을 만드는 건 실제 프로젝트 진행과 무관한 오버헤드였다.

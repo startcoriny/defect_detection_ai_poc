@@ -1,0 +1,6 @@
+crack
+incomplete_penetration
+lack_of_fusion
+porosity
+slag_inclusion
+undercut

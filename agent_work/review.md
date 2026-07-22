@@ -1,12 +1,12 @@
-# 코드 리뷰: 1차 PoC 데이터 선별 (`src/dataset/select_poc_dataset.py`)
+# 코드 리뷰: Polygon → Bounding Box 변환 (`src/conversion/polygon_to_box.py`)
 
 ## 요구사항 충족 여부
 
-- RT+AL 637건만 후보로 구성 — 확인
-- 그룹 분류 우선순위(누락→품질→중복→대상외혼입→정상/porosity/slag/both→무관) 그대로 구현 — 확인
-- `both` 그룹 강제 포함 — 확인
-- 그룹별 목표 100장, 고정 시드 재현성 — 확인
-- `selected_dataset.csv`(637행) / `included_files.txt` / `excluded_files.txt` 산출 — 확인
+- 작업8 선별 299장만 대상으로 함 — 확인
+- Polygon → Box 계산 + 이미지 경계 클리핑 + 퇴화 박스 오류 처리 — 확인
+- 작업6 `class_id` 그대로 재사용(재계산 없음) — 확인
+- `bbox_annotations.csv`, `bbox_conversion_errors.csv`, `outputs/polygon-box-comparison/`(299장 전체) 생성 — 확인
+- 객체 수 불일치 로그(발생 시 경고) — 확인
 
 ## 발견한 문제
 
@@ -15,29 +15,22 @@
 ## 실행 결과
 
 ```
-RT+AL candidates: 637
-Group normal: total=225, selected=100, selected_object_count=100
-Group porosity: total=222, selected=99, selected_object_count=239
-Group slag_inclusion: total=119, selected=99, selected_object_count=197
-Group both: total=1, selected=1, selected_object_count=3
-Target normal: planned=100, actual=100, difference=+0
-Target porosity: planned=100, actual=100, difference=+0
-Target slag_inclusion: planned=100, actual=100, difference=+0
-Exclusion non_target_class: 68
-Exclusion off_target_class_present: 2
-Exclusion quota_not_selected: 268
+대상 이미지 수: 299
+처리 완료: annotations=439, success=439, errors=0
+객체 수 불일치 이미지 수: 0
 ```
 
-- 검증: 100+99+99+1(선택 299) + 68+2+268(제외 338) = 637 — 정확히 일치
-- `porosity`/`slag_inclusion` 목표는 `both`의 1장이 두 그룹 모두에 겹쳐 계산되어 실제로 정확히 100씩 달성됨
-- `off_target_class_present` 2건 모두 `lack_of_fusion;porosity` 조합으로 확인 (설계 시 예상한 것과 결함 조합은 다르지만 처리 로직은 동일하게 정확히 동작)
-- black/ruff 통과, 재실행 2회 비교 결과 동일(재현성 확인)
+- `metadata/bbox_annotations.csv` 440줄(헤더+439), `bbox_conversion_errors.csv` 1줄(헤더만, 오류 0건)
+- `outputs/polygon-box-comparison/` 299장 생성 확인
+- 육안 확인: `RT_AL_02_14483871`(단일 폭넓은 porosity, Box가 Polygon을 정확히 감쌈), `RT_AL_02_14489189`(24개 다중 객체, 각각 Box·Polygon 정확히 대응), `RT_AL_00_14483440`(정상 이미지, Box/Polygon 없이 파일명·크기만 표시) — 모두 기대대로 동작
+- black/ruff 통과, 재실행 2회 비교 결과 동일(재현성 확인, 무작위 요소 없음)
+- 이번 RT+AL 선별 299장 범위에는 경계초과 좌표 사례가 실제로 없어(작업5 품질검사 결과상 경계초과 3건은 전부 VT/ST) 클리핑 로직이 실제로 발동한 사례는 없음 — 코드 상으로는 정상 동작하도록 구현되어 있음
 
 ## 사용자가 직접 확인하는 방법
 
-1. `venv/Scripts/python.exe src/dataset/select_poc_dataset.py` 실행 — 로그 마지막 줄들에서 `planned=100, actual=100, difference=+0`이 3개 클래스 모두 나오는지 확인
-2. `metadata/selected_dataset.csv` 행 수 확인 (헤더 포함 638줄이어야 함): `wc -l metadata/selected_dataset.csv`
-3. `both` 그룹 확인: `grep ",both," metadata/selected_dataset.csv` → `RT_AL_02_14488682` 1건, `selected=True`
-4. 대상외 혼입 제외 확인: `grep "off_target_class_present" metadata/selected_dataset.csv` → 2건
-5. `metadata/included_files.txt`(299줄) + `metadata/excluded_files.txt`(338줄) 합이 637인지 확인
-6. 재실행 후 세 산출 파일이 동일한지 확인(재현성)
+1. `venv/Scripts/python.exe src/conversion/polygon_to_box.py` 실행 — 로그 마지막 줄 `annotations=439, success=439, errors=0` 확인
+2. `outputs/polygon-box-comparison/RT_AL_02_14483871.jpg` — 폭넓은 단일 porosity를 Box가 정확히 감싸는지 확인
+3. `outputs/polygon-box-comparison/RT_AL_02_14489189.jpg` — 24개 다중 객체가 각각 Box·Polygon으로 표시되는지 확인
+4. `outputs/polygon-box-comparison/RT_AL_00_14483440.jpg` — 정상 이미지에 Box/Polygon 없는지 확인
+5. `metadata/bbox_annotations.csv`에서 `image_name`별 행 수를 세어 원본 JSON의 `case`가 빈 문자열이 아닌 annotation 수와 같은지 표본 확인
+6. 재실행 후 `bbox_annotations.csv`/`bbox_conversion_errors.csv`가 동일한지 확인

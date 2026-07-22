@@ -1,0 +1,7 @@
+class_id,class_name,image_count,object_count,rt_image_count,vt_image_count
+0,crack,225,436,225,0
+1,incomplete_penetration,225,324,0,225
+2,lack_of_fusion,452,680,227,225
+3,porosity,452,5179,227,225
+4,slag_inclusion,226,463,226,0
+5,undercut,225,541,0,225

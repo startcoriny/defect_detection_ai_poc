@@ -22,6 +22,8 @@ Review Agent(CLAUDE)가 코드 리뷰를 수행할 때 따르는 규칙입니다
 
 코드를 직접 수정하지 말고 `agent_work/review.md`에 작성해주세요.
 
+`agent_work/review.md` 마지막에는 항상 "사용자가 직접 확인하는 방법" 섹션을 포함합니다. 사용자가 리뷰 결과를 그대로 믿지 않고 스스로 재현·확인할 수 있도록, 실행할 명령어와 열어볼 파일 경로를 구체적으로 적습니다 (예: `venv/Scripts/python.exe src/xxx.py` 실행, `outputs/xxx/파일명.jpg` 열어서 무엇을 확인하는지, 재현성 확인 방법 등).
+
 ## 심각도 분류
 
 ### Blocker

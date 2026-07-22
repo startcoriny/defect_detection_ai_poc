@@ -11,7 +11,7 @@ __pycache__/
 .ipynb_checkpoints/
 
 # 데이터 (AI-Hub 원본 및 변환 데이터, 용량 크고 코드로 재생성 가능)
-data/
+/data/
 
 # 모델 가중치
 models/

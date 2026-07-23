@@ -26,6 +26,7 @@ experiments/*/models/
 experiments/*/predictions/
 experiments/*/visualizations/
 experiments/*/errors/
+experiments/*/runs/
 
 # 추론 / 자동 라벨 / 시각화 산출물 (재생성 가능)
 predictions/

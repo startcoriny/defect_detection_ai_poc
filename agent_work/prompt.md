@@ -1,99 +1,111 @@
-# 구현 지시서: 데이터셋 최종 검증
+# 구현 지시서: Smoke Test
 
 ## 배경
 
-`docs/context/02-task-list.md` 작업15(데이터셋 최종 검증)와 `docs/context/03-deliverables.md` 3.3절(`validate_yolo_dataset.py`)에 따라, 작업14가 만든 `data/processed/dataset_v1/`을 학습 직전 마지막으로 독립 재검증한다.
+`docs/context/02-task-list.md` 작업16(Smoke Test)과 `docs/context/03-deliverables.md` 3.7절(`smoke_test.py`)에 따라, 소량 데이터·짧은 Epoch로 학습→검증→체크포인트 생성→추론까지 전체 명령이 실제로 동작하는지 확인한다. 작업17(Baseline 학습) 전 마지막 관문이다.
 
-**설계 원칙**: 이 작업은 작업9~14가 이미 계산·검증한 값(`metadata/*.csv`)을 다시 신뢰하지 않고, **`data/processed/dataset_v1/`에 실제로 존재하는 파일만을 근거로** 처음부터 다시 검사한다(학습 직전 최종 게이트라는 작업 취지에 맞음). `metadata/`는 참조하지 않는다.
-
-**대상 범위**: `data/processed/dataset_v1/images/{train,val,test}/*.jpg`, `data/processed/dataset_v1/labels/{train,val,test}/*.txt`, `data/processed/dataset_v1/data.yaml`.
+**참고 — 실험 기록 체계와의 관계**: `docs/context/04-experiment-log-template.md`의 `experiments/EXP-P1-DET-XXX/` 전체 구조(실험 ID, YAML 메타데이터, `experiment_index.csv` 등)는 성능을 비교·추적할 "진짜 실험"을 위한 것이다. 같은 문서 20절의 예시도 `EXP-P1-DET-001`을 Baseline(작업17)으로 들고 있다. Smoke Test는 성능을 측정하거나 비교하지 않고 "학습 명령이 도는가"만 확인하는 일회성 점검이므로, 이번 작업은 `experiments/` 체계를 적용하지 않고 가벼운 `outputs/smoke_test/`에 결과를 남긴다(정식 실험 기록은 작업17부터 시작).
 
 ## 기능 및 요구사항
 
-### `src/validation/validate_yolo_dataset.py` (신규)
+### `src/model/smoke_test.py` (신규)
 
-#### 1. 입력
+#### 1. 스모크 데이터 구성 (15장, 복사 없이 경로 목록만 사용)
 
-- `data/processed/dataset_v1/data.yaml`: `path`, `train`/`val`/`test` 상대경로, `names`(class_id→class_name, 0부터 연속) — 여기서 유효 `class_id` 범위(0~5)를 얻는다(재계산 없음, `data.yaml`에 이미 있는 값을 그대로 읽음).
-- 위 경로가 가리키는 `images/`, `labels/` 폴더의 실제 파일 목록.
+- `metadata/selected_dataset.csv`에서 `selected=="True"`이고 `split_group=="train"`인 이미지 중, `group` 값이 `normal`/`porosity`/`slag_inclusion`인 것을 각각 `image_name` 오름차순으로 5장씩 골라 총 15장을 구성한다(정상·두 대상 클래스가 모두 포함되도록 함, 무작위 추출 없음).
+- 각 이미지의 실제 경로는 `data/processed/dataset_v1/images/train/{image_name}.jpg`(작업14 산출물, 이미 존재)를 그대로 사용한다 — 별도 복사를 하지 않는다.
+- 위 15개 이미지의 **절대경로**를 한 줄씩 적은 `outputs/smoke_test/smoke_images.txt`를 생성한다. Ultralytics는 이미지 경로의 `images` 디렉터리를 `labels`로, 확장자를 `.txt`로 바꿔 라벨을 자동으로 찾으므로 별도 라벨 파일 준비가 필요 없다(작업14가 만든 `labels/train/*.txt`가 그대로 매칭됨).
 
-#### 2. 검증 항목(작업5의 ERROR/WARNING/INFO 어휘 체계를 그대로 적용)
+#### 2. `outputs/smoke_test/smoke_data.yaml` 생성
 
-**ERROR(치명적 — 1건이라도 있으면 학습 불가)**:
-
-- `image_missing`: 라벨 파일은 있는데 대응하는 이미지가 없음
-- `label_missing`: 이미지는 있는데 대응하는 라벨 파일이 없음(위 둘이 "이미지·라벨 파일명 일치" 항목도 함께 충족시킴)
-- `image_unreadable`: 이미지 파일이 존재하지만 `src/common/image_utils.read_image`로 디코딩 실패
-- `label_line_value_count_mismatch`: 라벨의 한 줄이 공백으로 나눴을 때 정확히 5개 값이 아님
-- `class_id_out_of_range`: 라벨의 `class_id`가 `data.yaml`의 `names`에 없는 값
-- `coordinate_out_of_range`: `center_x`/`center_y`/`width`/`height` 중 하나라도 `[0, 1]` 범위를 벗어남
-- `cross_split_duplicate`: 같은 `image_name`이 `train`/`val`/`test` 중 둘 이상에 존재
-
-**WARNING(검토 필요, 치명적은 아님)**:
-
-- `class_missing_in_split`: 데이터셋 전체(3개 분할 합산)에는 등장하지만 특정 분할에는 한 번도 등장하지 않는 `class_id`가 있음(이번 데이터셋에서는 `porosity`/`slag_inclusion`만 대상 — 애초에 등장하지 않는 클래스는 검사하지 않는다)
-
-**정상 처리(오류 아님, 그냥 집계)**:
-
-- 라벨 파일 내용이 빈 문자열(공백만 있어도 빈 것으로 취급)이면 "정상 이미지"로 집계만 하고 오류로 기록하지 않는다("빈 라벨 처리" 항목).
-
-#### 3. 산출물
-
-`reports/dataset/final_dataset_validation_report.csv`, ERROR/WARNING 발견 건만 행으로 기록(정상 파일은 행을 만들지 않는다), 컬럼:
-
-```
-split, image_name, check, severity, detail
+```yaml
+path: <프로젝트 루트 절대경로, 슬래시(/) 구분자>
+train: outputs/smoke_test/smoke_images.txt
+val: outputs/smoke_test/smoke_images.txt
+names:
+  0: crack
+  1: incomplete_penetration
+  2: lack_of_fusion
+  3: porosity
+  4: slag_inclusion
+  5: undercut
 ```
 
-`reports/dataset/final_dataset_validation_summary.md`: 한글 서술 보고서. 다음을 포함한다:
+(`names`는 `metadata/yolo_classes.txt`를 그대로 재사용 — 작업14와 동일하게 재계산하지 않는다. Train/Val이 같은 15장인 것은 의도적 — 성능을 측정하려는 게 아니라 학습·검증 두 단계가 실제로 실행되는지만 확인하기 위함이며, 이를 코드 주석으로 명시한다.)
 
-- 분할별 이미지 수, 정상(빈 라벨) 이미지 수
-- 검증 성공(오류 없음) 파일 수 vs 실패(ERROR 있음) 파일 수
-- 체크 항목별 ERROR/WARNING 건수
-- **학습 가능 여부**: ERROR 0건이면 "학습 가능", 1건 이상이면 "학습 불가 — 아래 오류 확인 필요"
-- **데이터셋 버전 고정**: `data/processed/dataset_v1/`의 모든 파일(이미지+라벨+`data.yaml`)을 상대경로 오름차순으로 정렬해 각 파일의 SHA-256 해시를 이어붙인 뒤 다시 SHA-256을 계산한 "데이터셋 매니페스트 해시" 1개 값을 기록한다(재실행 시 같은 값이 나와야 "버전이 고정"됨을 확인할 수 있음).
+#### 3. 학습 실행
 
-#### 4. 로그
+`ultralytics.YOLO`로 프로젝트 루트의 `yolo26n.pt`(이미 존재, 작업1에서 확인됨)를 로드해 다음 설정으로 학습한다:
 
-`logging`으로: 분할별 이미지/라벨 수, 체크 항목별 ERROR/WARNING 건수, 데이터셋 매니페스트 해시, 최종 "학습 가능"/"학습 불가" 판정.
+```
+epochs=2
+imgsz=640
+batch=4
+device="cpu"
+workers=0          # Windows에서 DataLoader 멀티프로세싱 이슈 회피
+seed=42
+deterministic=True
+patience=50        # 2 epoch에서는 절대 발동하지 않도록 충분히 크게(라이브러리 기본값)
+project="outputs/smoke_test/runs"
+name="smoke"
+exist_ok=True
+data="outputs/smoke_test/smoke_data.yaml"
+```
+
+학습 도중 예외가 발생하면 예외 메시지와 스택 정보를 그대로 로그에 남기고 실행을 실패시킨다(조용히 넘어가지 않는다 — "오류 해결 기록" 산출물의 근거가 되어야 함).
+
+#### 4. 검증 (학습 결과물 기준으로 확인)
+
+- `outputs/smoke_test/runs/smoke/weights/best.pt`, `last.pt`가 실제로 생성됐는지 확인.
+- `outputs/smoke_test/runs/smoke/results.csv`에 Validation 지표 컬럼(`metrics/precision(B)`, `metrics/recall(B)` 등 Ultralytics가 기록하는 컬럼)이 있는지 확인해 "Validation이 실행됨"을 검증.
+- `best.pt`를 **디스크에서 다시 로드**해(학습 직후 메모리의 모델 객체를 재사용하지 않고, 실제 저장된 파일이 동작하는지 확인하기 위함) 15장 중 3장으로 `model.predict(..., save=True, project="outputs/smoke_test/runs", name="predict")`를 실행하고, 추론 결과 이미지가 저장됐는지 확인한다.
+
+#### 5. 로그 및 오류 기록
+
+`logging`으로: 스모크 데이터 15장 구성 내역(정상/porosity/slag_inclusion 각 5장), 학습 시작·종료, 각 검증 단계 결과, 최종 판정(`학습 오류 없이 완료 / Validation 실행됨 / 모델 파일 생성됨 / 추론 가능 / Baseline 학습 시작 가능` 5개 항목을 각각 확인·기록).
 
 ## 구현 범위 (In Scope)
 
-- `src/validation/validate_yolo_dataset.py` 신규 생성
-- `reports/dataset/{final_dataset_validation_report.csv, final_dataset_validation_summary.md}` 신규 생성
+- `src/model/smoke_test.py` 신규 생성
+- `outputs/smoke_test/` 전체(스크립트 실행 결과물 — CODEX가 미리 만들지 않는다)
 
 ## 구현 제외 범위 (Out of Scope)
 
-- `metadata/*.csv`, `outputs/`, `data/raw` 등 다른 산출물과의 교차 검증 — 이번 작업은 `data/processed/dataset_v1/`만 독립적으로 검사한다.
-- 발견된 오류의 자동 수정 — 검증만 하고 수정하지 않는다(오류가 있으면 그대로 보고).
-- 작업16(Smoke Test) 이후 단계.
+- `experiments/EXP-P1-DET-*/` 전체 구조, `experiment_index.csv` — 작업17(Baseline)부터 적용.
+- `train_baseline.py`, `run_inference.py` 등 다른 `src/model/*.py` — 이후 작업 범위.
+- `data/processed/dataset_v1/` 수정 — 읽기 전용, 이미지·라벨 복사 없이 경로 목록만 사용.
 
 ## 작업 전 반드시 확인해야 하는 문서
 
-- `docs/context/02-task-list.md` 774~805줄(작업15: 수행 작업, 검증 항목, 산출물, 완료 조건)
-- `docs/context/03-deliverables.md` 293~312줄(3.3 데이터 검증 코드)
-- `data/processed/dataset_v1/data.yaml`, `data/processed/dataset_v1/{images,labels}/{train,val,test}/`
-- `src/validation/validate_polygon.py`(작업5) — ERROR/WARNING 어휘 체계·CSV 산출물 패턴 참고
-- `src/common/image_utils.py`(`read_image`)
+- `docs/context/02-task-list.md` 808~844줄(작업16: 수행 작업, 확인할 내용, 산출물, 완료 조건)
+- `docs/context/03-deliverables.md` 376~394줄(3.7 학습 및 추론 코드)
+- `docs/context/04-experiment-log-template.md` 1~50줄, 1032~1057줄(실험 ID·폴더 구조 — 이번 작업엔 적용하지 않는 이유 확인용)
+- `metadata/selected_dataset.csv`(`group`, `split_group` 컬럼), `metadata/yolo_classes.txt`
+- `data/processed/dataset_v1/data.yaml`(작업14, 참고용 — 이번엔 새 스모크 전용 yaml을 만든다)
+- 프로젝트 루트의 `yolo26n.pt`
 
 ## 완료 기준 (Definition of Done)
 
-- ( ) 치명적(ERROR) 오류가 0건이다.
-- ( ) WARNING 항목이 있다면 보고서에 남아 검토할 수 있다(0건이어도 무방).
-- ( ) Train·Val·Test 모두 이미지·라벨 파일명이 1:1로 일치하고 읽기 가능해 학습 가능한 구조임이 확인된다.
-- ( ) 데이터셋 매니페스트 해시로 버전이 고정되어, 재실행해도 동일한 해시가 나온다(재현성).
+- ( ) 학습이 오류 없이 끝난다(2 epoch).
+- ( ) Validation이 실행된다(`results.csv`에 검증 지표 존재).
+- ( ) 모델 파일(`best.pt`, `last.pt`)이 생성된다.
+- ( ) 생성된 모델 파일을 다시 로드해 이미지 추론이 가능하다.
+- ( ) 위 4가지가 전부 확인되면 "전체 Baseline 학습을 시작할 수 있다"고 로그에 명시한다.
 - ( ) 코드가 PEP 8 / black 포맷을 따른다.
 
 ## 제약사항
 
-- 표준 라이브러리(`csv`, `hashlib`, `logging`, `pathlib`) + `opencv-python`, `numpy`, `pyyaml` + 기존 `src/common/*` 유틸만 사용한다.
-- `data/processed/dataset_v1/` 아래 기존 파일은 읽기만 하고 수정하지 않는다.
+- `ultralytics`, `pyyaml`, 표준 라이브러리만 사용한다(이미 `requirements.txt`에 있음).
+- `data/processed/dataset_v1/`, `metadata/`, `yolo26n.pt`는 읽기만 하고 수정하지 않는다.
 - 함수/모듈 주석은 한글로 작성한다(프로젝트 관례).
+- 이 실행은 CODEX 샌드박스에서 직접 검증할 수 없다(Python 실행 불가 환경) — 코드 작성까지만 CODEX가 담당하고, 실제 실행·결과 확인은 CLAUDE가 `venv/Scripts/python.exe`로 수행한다.
 
 ## 테스트 방법 및 검증 기준 (CODEX 완료 후 CLAUDE가 이어서 수행)
 
-1. `venv/Scripts/python.exe src/validation/validate_yolo_dataset.py` 실행 — 로그에서 ERROR 0건, "학습 가능" 확인
-2. `reports/dataset/final_dataset_validation_report.csv`가 헤더만 있는지(오류 0건) 확인
-3. `reports/dataset/final_dataset_validation_summary.md`에서 분할별 이미지 수(209/44/46), 정상 이미지 수(100)가 기존 작업13·14 결과와 일치하는지 확인
-4. 매니페스트 해시를 기록해두고, 재실행 후 동일한 해시가 나오는지 확인(재현성 = 버전 고정 확인)
-5. `docs/context/02-task-list.md` 작업15 완료 조건 4개 충족 여부 확인
+1. `venv/Scripts/python.exe src/model/smoke_test.py` 실행(CPU 학습이라 다소 시간이 걸릴 수 있음)
+2. 로그에서 학습이 오류 없이 2 epoch를 마쳤는지 확인
+3. `outputs/smoke_test/runs/smoke/weights/{best.pt,last.pt}` 존재 확인
+4. `outputs/smoke_test/runs/smoke/results.csv`에 Validation 지표 컬럼이 있는지 확인
+5. `outputs/smoke_test/runs/predict/`에 추론 결과 이미지가 저장됐는지 확인
+6. 로그의 최종 판정 5개 항목이 전부 충족됐는지 확인
+7. `docs/context/02-task-list.md` 작업16 완료 조건 5개 충족 여부 확인

@@ -226,9 +226,29 @@ Best epoch loss:
 - Class Loss: 3.658330
 - L1 Loss: 0.007930
 
-## 9.2 학습 과정 해석
+## 9.2 학습 과정 해석 (작업18)
 
-정량·정성 해석은 후속 평가 작업18~25에서 작성한다. 본 작업에서는 학습 완료 여부와 원시 학습 지표를 기록한다.
+### Baseline 학습 결과 요약
+
+모델이 실제로 학습됐다. `train/cls_loss`가 9.87(epoch 1) → 2.8~3.4대(epoch 30대 이후)로 약 70% 감소했고, `train/box_loss`(2.98→1.8대)와 `train/l1_loss`(0.014→0.007대)도 각각 절반 수준으로 줄었다. `mAP50`은 0(epoch 1~2, 무작위 수준) → epoch 20 전후로 0.2~0.3대에 도달한 뒤 그 구간에서 등락하며 정체됐다.
+
+### Best Epoch
+
+`results.csv`에서 Ultralytics fitness(`0.1*mAP50 + 0.9*mAP50-95`) 기준 최고점은 27번째 epoch(precision 0.294 / recall 0.317 / mAP50 0.273 / mAP50-95 0.116)이며, 이 값이 `best.pt`로 저장됐다. 다만 21번째(fitness 0.1298)·23번째(0.1300)·25번째(0.1290) epoch도 27번째(0.1317)와 근소한 차이라, "최고점"이라기보다 노이즈가 큰 정체 구간의 최상단에 가깝다(아래 이상 징후 참고).
+
+### 학습 그래프 해석
+
+- **Train/Validation Loss 변화**: `train`과 `val`의 `box_loss`·`cls_loss`·`l1_loss`가 처음부터 끝까지 거의 나란히 움직인다(`results.png` 1행·2행 비교). Train Loss만 계속 떨어지고 Val Loss는 정체·상승하는 전형적 과적합 패턴은 보이지 않는다.
+- **Precision/Recall/mAP50/mAP50-95 변화**: epoch 1~2는 예측이 전혀 없어 전부 0이다. epoch 3부터 값이 나타나기 시작해 epoch 18~20 전후로 mAP50 0.2대에 도달한 뒤, 이후 20개 epoch(21~41) 동안 뚜렷한 추가 개선 없이 0.2~0.3 구간에서 등락한다. Precision·Recall은 인접 epoch 간에도 0.1~0.2p 이상 튀는 등 변동폭이 크다(예: epoch 4 recall 0.232 → epoch 5 recall 0.464 → epoch 7 recall 0.071).
+- **Early Stopping 여부**: 발동했다. patience=15 기준으로 27번째 epoch 이후 15개 epoch(28~41... 정확히는 42번째 epoch 직전) 동안 fitness 개선이 없어 41 epoch(0-index 기준 로그상 "epoch 26")에서 자동 종료됐다. 의도한 대로 동작.
+- **과적합 가능성**: 낮다. Train/Val Loss가 함께 움직이는 것이 근거다. 다만 후반부(특히 마지막 epoch 41)에서 Precision이 오르고(0.406) Recall이 크게 떨어지는(0.185) 현상이 있는데, 이 epoch은 Ultralytics가 마지막 구간에 Mosaic Augmentation을 끄는 시점(`Closing dataloader mosaic` 로그, epoch 41 직전)과 겹친다. Loss가 아니라 증강 설정 전환에 따른 단발성 변동일 가능성이 높아 보이며, 여러 epoch에 걸친 지속적 추세는 아니다.
+- **클래스별 성능 차이**: `best.pt` 최종 검증 기준 porosity(15장/28개 객체) Precision 0.295·Recall 0.299·mAP50 0.250, slag_inclusion(14장/21개 객체) Precision 0.296·Recall 0.333·mAP50 0.299로, slag_inclusion이 조금 더 높다. `confusion_matrix.png` 확인 결과 정답 매칭(대각선)은 porosity 14건·slag_inclusion 15건이고, 클래스 간 상호 오분류는 slag_inclusion을 porosity로 예측한 경우 8건, 반대(porosity를 slag_inclusion으로) 3건으로 비대칭적이다. 작업12에서 확인한 대로 porosity가 작은 객체(Small) 위주라는 점이 mAP50이 더 낮게 나오는 방향과 일치한다.
+
+### 이상 징후 목록
+
+1. **배경 오탐(FP)이 클래스 간 혼동보다 압도적으로 많다.** `confusion_matrix.png`에서 "예측=porosity, 실제=background"가 1833건, "예측=slag_inclusion, 실제=background"가 926건으로, 정답 매칭(14건·15건)이나 클래스 간 혼동(8건·3건)과 비교가 안 될 정도로 크다. Confusion Matrix는 최종 리포트의 Precision/Recall과 계산 방식(임계값 처리)이 달라 이 절대 건수를 그대로 "실제 배포 시 오탐률"로 해석할 수는 없지만, 정성적으로는 "두 결함을 헷갈리는 것"보다 "배경을 결함으로 잘못 짚는 것"이 훨씬 더 큰 오차 원인임을 보여준다. 작업24(오탐·미탐 분석)에서 실제 오탐 이미지를 눈으로 확인해볼 필요가 있다.
+2. **검증 지표의 epoch 간 변동폭이 매우 크다.** Validation이 44장·49개 객체뿐이라, 소수 이미지의 예측 결과가 바뀌는 것만으로 mAP50·Recall이 크게 흔들린다(예: epoch 39 recall 0.299 → epoch 40 recall 0.381 → epoch 41 recall 0.185). "Best epoch"이 통계적으로 유의미하게 더 나은 모델이라기보다, 노이즈가 큰 정체 구간에서 우연히 더 높게 나온 지점일 가능성을 감안해야 한다.
+3. **cls_loss는 종료 시점에도 완만한 하락 추세가 남아있는 반면, box_loss·l1_loss는 epoch 15~20 근방에서 이미 정체됐다.** 즉 현재 병목은 위치 추정보다 분류 쪽일 가능성이 있다 — 작업25(다음 실험 후보 선정)에서 patience를 늘려 cls_loss 수렴 여지를 더 주는 방안도 고려할 만하다.
 
 # 10. 추론 설정
 

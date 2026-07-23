@@ -1,140 +1,93 @@
-# 구현 지시서: Baseline 모델 학습
+# 구현 지시서: 자동 라벨 파일 생성
 
 ## 배경
 
-`docs/context/02-task-list.md` 작업17(Baseline 모델 학습), `docs/context/03-deliverables.md` 3.7절(`train_baseline.py`), `docs/context/04-experiment-log-template.md`에 따라, `data/processed/dataset_v1/`(작업14~15에서 만들고 검증한 데이터셋) 전체로 처음 진짜 성능을 측정하는 Baseline 학습을 실행하고, 이번 작업부터 정식 실험 기록 체계(`experiments/EXP-P1-DET-001/`)를 시작한다.
+`docs/context/02-task-list.md` 작업20(자동 라벨 파일 생성), `docs/context/03-deliverables.md` 3.7절(`export_auto_labels.py`)·5.4절(자동 라벨 결과 산출물)에 따라, 작업19에서 생성한 `predictions/prediction_results.json`(Test 46장 추론 원본 결과)을 표준 YOLO Detection TXT + 메타데이터 JSON + CVAT Import용 데이터로 정리한다.
 
-**실험 식별**: `docs/context/04-experiment-log-template.md`가 이미 예시로 제시한 `실험 ID: EXP-P1-DET-001`, `실험명: RT_AL_YOLO26N_640_Baseline`을 그대로 사용한다(새로 이름을 짓지 않는다).
-
-**gitignore 정책(사용자 확인 완료)**: `.gitignore`에 이미 `*.pt`, `experiments/*/{logs,models,predictions,visualizations,errors}/`를 제외하는 규칙이 있다. 이 규칙을 그대로 유지한다 — `experiment.md`, `experiment.yaml`, `train_config.yaml`, `environment.txt`, `dataset_summary.csv`(experiment 폴더 최상위, 텍스트/CSV)만 git에 커밋되고, `logs/`, `models/`(`best.pt`/`last.pt` 포함), `visualizations/`는 재현 가능한 산출물로 남기되 커밋하지 않는다.
+이번 작업은 **새로운 추론을 하지 않는다**. 작업19가 이미 만든 `predictions/prediction_results.json`을 유일한 입력으로 읽어서 재가공만 한다(모델을 다시 로드하거나 이미지를 다시 추론하지 않는다).
 
 ## 기능 및 요구사항
 
-### `src/model/train_baseline.py` (신규)
+### `src/model/export_auto_labels.py` (신규)
 
-#### 1. 실험 폴더 준비
+#### 1. 입력
 
-```
-experiments/EXP-P1-DET-001/
-├── experiment.md
-├── experiment.yaml
-├── train_config.yaml
-├── environment.txt
-├── dataset_summary.csv
-├── logs/
-│   └── train.log
-├── models/
-│   ├── best.pt
-│   └── last.pt
-└── visualizations/
-    ├── results.png
-    └── confusion_matrix.png
-```
+- `predictions/prediction_results.json`(작업19 산출물, 유일한 입력)
+- `metadata/yolo_classes.txt`(CVAT `obj.names`용 클래스 이름 목록, 재사용)
 
-#### 2. 학습 실행
+#### 2. `auto-labels/yolo-labels/` 생성
 
-`data/processed/dataset_v1/data.yaml`(작업14 산출물, 그대로 재사용)로 `yolo26n.pt`(프로젝트 루트, 이미 존재)를 다음 설정으로 학습한다:
+- Test 46장 **전부에 대해** 이미지 스템(확장자 제외 파일명)과 같은 이름의 `.txt` 파일을 만든다.
+- 예측이 있으면 객체당 한 줄, `class_id center_x center_y width height`(정규화 좌표, `prediction_results.json`의 `bbox_normalized_xywh` 그대로 사용, 소수점 6자리) 형식으로 기록한다.
+- 예측이 없는 이미지(정상 이미지, 미탐 이미지 포함)는 **빈 파일**(0바이트)을 만든다. 파일을 아예 안 만드는 것이 아니다 — 작업14(`build_yolo_dataset.py`)가 이미 "정상 이미지는 빈 라벨 파일"이라는 관례를 세워뒀으므로 그 관례를 따른다(Ultralytics의 `save_txt`가 예측 없는 이미지에 파일을 안 만드는 것과는 다른, 이 프로젝트의 의도적 선택이다).
 
-```
-epochs=50
-patience=15
-imgsz=640
-batch=-1          # "자동 결정" 요구사항 — CPU에서는 Ultralytics가 WARNING과 함께 기본값 16으로 대체함(실제 로그로 확인됨). 이 동작을 그대로 둔다.
-device="cpu"
-workers=0         # Windows DataLoader 멀티프로세싱 이슈 회피(작업16과 동일 이유)
-cache=True        # CPU 환경에서 반복 50 epoch 속도를 위해 이미지 캐싱
-seed=42
-deterministic=True
-optimizer="auto"
-project=<프로젝트 루트 기준 절대경로>/experiments/EXP-P1-DET-001/runs   # 반드시 절대경로로 넘길 것 — 상대경로를 넘기면 Ultralytics가 자체 기본 project 아래에 중첩시키는 문제가 실제로 발생함(확인됨)
-name="train"
-exist_ok=True
-```
+#### 3. `auto-labels/prediction-metadata/` 생성
 
-학습 콘솔 출력을 `experiments/EXP-P1-DET-001/logs/train.log`에도 그대로 남긴다(`logging.FileHandler` + `logging.StreamHandler`, 작업16과 동일 패턴).
+- `export_metadata.json`: `docs/context/02-task-list.md` 작업20의 예시 스키마를 따른다.
+  ```json
+  {
+    "model_version": "EXP-P1-DET-001",
+    "confidence_threshold": 0.25,
+    "exported_at": "<ISO 8601, 이 스크립트 실행 시각>",
+    "source": "predictions/prediction_results.json"
+  }
+  ```
+  (`model_version`은 작업19와 동일하게 임의 문자열 `"baseline_v1"` 대신 실제 실험 ID `EXP-P1-DET-001`을 사용한다 — 작업19에서 이미 내린 결정과 일관성 유지.)
+- `prediction_results.json`: 작업19가 만든 원본 파일을 **그대로 복사**한다(추론 시간, 픽셀 좌표, 실패 목록 등 원본 정보를 하나도 잃지 않기 위해 — 완료 조건 "원본 추론 결과를 잃지 않는다"를 문자 그대로 만족).
 
-학습 중 예외가 발생하면 로그에 스택과 함께 남기고 실행을 실패시킨다(조용히 넘어가지 않는다).
+#### 4. `auto-labels/cvat-import/` 생성 (CVAT YOLO 1.1 / Darknet 형식)
 
-#### 3. 산출물 정리
-
-- `experiments/EXP-P1-DET-001/runs/train/weights/{best.pt,last.pt}`를 `experiments/EXP-P1-DET-001/models/`로 복사.
-- `experiments/EXP-P1-DET-001/runs/train/results.png`, `confusion_matrix.png`를 `experiments/EXP-P1-DET-001/visualizations/`로 복사(Ultralytics가 자동 생성 — 직접 그리지 않는다. `results.png`가 Loss 그래프와 평가 그래프를 함께 담고 있다).
-- Ultralytics가 자동 생성하는 `experiments/EXP-P1-DET-001/runs/train/args.yaml`을 `experiments/EXP-P1-DET-001/train_config.yaml`로 복사(직접 손으로 작성하지 않는다 — 실제 사용된 전체 설정이 이미 여기 담겨 있음).
-
-#### 4. `environment.txt` 생성
-
-`configs/environment/environment_info.txt`와 `configs/environment/package_versions.txt`(작업1 산출물, 재사용)를 이어붙여 `experiments/EXP-P1-DET-001/environment.txt`로 저장한다. 새로 환경을 스캔하지 않는다(동일 머신·동일 venv이므로 재사용).
-
-#### 5. `dataset_summary.csv` 생성
-
-`reports/dataset/split_distribution.csv`(작업13/14, 재사용)를 그대로 복사해 `experiments/EXP-P1-DET-001/dataset_summary.csv`로 저장한다(분할×표준클래스 6개, 재계산 없음).
-
-#### 6. `experiment.yaml` 생성
-
-`docs/context/04-experiment-log-template.md` 19절 YAML 스키마를 따라 다음 값을 실제 값으로 채운다:
-
-- `experiment.id`: `EXP-P1-DET-001`, `experiment.name`: `RT_AL_YOLO26N_640_Baseline`, `status`: 학습 성공 시 `completed`(실패 시 `failed`), `type`: `detection_training`
-- `experiment.started_at`/`ended_at`: 학습 시작·종료 시각(ISO 8601)
-- `experiment.git_commit`: `git rev-parse HEAD`로 실행 시점의 커밋 해시를 얻어 기록(subprocess 사용)
-- `dataset.image_count`: `data/processed/dataset_v1/images/{train,val,test}/*.jpg` 개수를 직접 세어 채운다(작업14/15와 같은 값이어야 하지만, 이 스크립트도 독립적으로 다시 셈)
-- `dataset.classes`: `metadata/class_statistics.csv`에서 이번 데이터셋에 실제 객체가 있는 클래스만(=`porosity`: 3, `slag_inclusion`: 4) 기재
-- `training.actual_batch`: `experiments/EXP-P1-DET-001/runs/train/args.yaml`에서 실제 사용된 `batch` 값을 읽어 채운다(자동 결정 결과)
-- `metrics`: `experiments/EXP-P1-DET-001/runs/train/results.csv`의 마지막 행에서 `metrics/precision(B)`, `metrics/recall(B)`, `metrics/mAP50(B)`, `metrics/mAP50-95(B)` 값을 읽어 채운다
-- `inference`: 이번 작업 범위 밖이므로 `confidence`/`iou`/`imgsz`는 전부 `null`로 남긴다(작업19에서 채움)
-- `artifacts`: `best_model`/`last_model`/`results_directory`를 실제 경로로 채우고, `prediction_json`/`evaluation_report`는 `null`
-- `conclusion`: 전부 `null`/`false`(이번 작업 범위 밖, 작업18 이후에서 채움)
-
-#### 7. `experiment.md` 생성
-
-`docs/context/04-experiment-log-template.md` 3~9절 구조를 따라 다음 섹션을 실제 값으로 채운다(23절의 Baseline 예시 문구를 뼈대로 재사용해도 좋다):
-
-- 1절(실험 기본 정보), 2절(목적과 가설 — 예시 문구 그대로 사용 가능), 3절(기준 실험: 없음, 최초 Baseline), 5절(데이터셋 정보 — `dataset_summary.csv`/`environment.txt`와 일치해야 함), 6절(전처리·변환 정보 — Polygon→Box는 작업9, YOLO 변환은 작업10 참조, 이미지 Resize는 Ultralytics 기본 letterbox·라이브러리 기본값이라고 명시), 7절(실행 환경 — `environment.txt` 값 재사용), 8절(모델 및 학습 설정 — 이번 학습에 실제 사용한 값, 증강 설정은 커스터마이징하지 않았으므로 표 전체에 "library default"라고 명시하되 `args.yaml`에서 실제 값도 함께 적음), 9절(학습 실행 결과 — 시작/종료 시각, 총 소요시간, Early Stopping 발동 여부, best/최종 Epoch, 모델 경로, Best/Last의 Precision/Recall/mAP50/mAP50-95)
-- 10절 이후(추론 설정, 전체·클래스별 성능, Threshold 비교, 정성 평가, 원인 분석, Baseline 비교, 결론, 다음 실험 계획)는 이번 작업 범위가 아니므로 각 섹션 제목만 남기고 본문은 `실험 후 작성(작업18~25에서 채움)`이라고 명시한다 — 파일을 나중에 다시 열어 이어 쓸 수 있도록 섹션 골격은 미리 만들어 둔다.
+- `obj.names`: `metadata/yolo_classes.txt`의 6개 클래스 이름을 줄 순서 그대로 복사(클래스 ID = 줄 번호, 프로젝트 전체에서 이미 쓰는 순서와 동일해야 함).
+- `obj.data`:
+  ```
+  classes = 6
+  train = train.txt
+  names = obj.names
+  backup = backup/
+  ```
+- `train.txt`: Test 46장의 상대경로(`obj_train_data/<파일명>`)를 한 줄씩, 파일명 순으로 기록.
+- `obj_train_data/`: Test 46장 이미지(`data/processed/dataset_v1/images/test/`에서 복사, `shutil.copy2` 사용 — 원본은 읽기 전용) + 위 2번에서 만든 것과 동일한 내용의 라벨 TXT(이미지당 1개, 빈 파일 포함) 를 나란히 둔다.
 
 ## 구현 범위 (In Scope)
 
-- `src/model/train_baseline.py` 신규 생성
-- `experiments/EXP-P1-DET-001/` 전체(스크립트 실행 결과물 — CODEX가 미리 만들지 않는다)
+- `src/model/export_auto_labels.py` 신규 작성
+- `auto-labels/{yolo-labels, prediction-metadata, cvat-import}/` 전체 생성
 
 ## 구현 제외 범위 (Out of Scope)
 
-- `run_inference.py`, `export_auto_labels.py`, `compare_thresholds.py` — 이후 작업 범위.
-- `experiment_index.csv`(전체 실험 목록 관리) — 실험이 1개뿐인 지금 단계에서는 과잉이므로 만들지 않는다. 두 번째 실험이 생길 때(비교 실험 시작 시) 도입 여부를 다시 판단한다.
-- `data/processed/dataset_v1/`, `metadata/`, `reports/dataset/`, `configs/environment/` 등 기존 산출물 수정 — 전부 읽기 전용.
+- 실제 CVAT 서버에 Import해서 검증하는 것(작업21의 범위, "가능하면" 수행하는 선택 사항이며 1차 PoC 필수 범위 밖).
+- 새로운 모델 추론, Confidence Threshold 비교(작업22), 시각화 재생성(작업21) — 전부 이번 작업 범위가 아니다.
+- `predictions/prediction_results.json` 자체를 수정하는 것 — 읽기 전용으로 참조만 한다.
 
-## 작업 전 반드시 확인해야 하는 문서
+## 작업 전 확인해야 하는 문서/코드
 
-- `docs/context/02-task-list.md` 848~891줄(작업17: 수행 조건, 기록 항목, 산출물, 완료 조건)
-- `docs/context/03-deliverables.md` 376~394줄(3.7 학습 및 추론 코드)
-- `docs/context/04-experiment-log-template.md` 전체(특히 3~9절 양식, 19절 YAML 스키마, 20절 폴더 구조, 23절 Baseline 예시)
-- `.gitignore`(실험 폴더 관련 규칙)
-- `data/processed/dataset_v1/data.yaml`, `metadata/yolo_classes.txt`, `metadata/class_statistics.csv`, `reports/dataset/split_distribution.csv`
-- `configs/environment/{environment_info.txt,package_versions.txt}`
-- `src/model/smoke_test.py`(작업16) — 로깅·경로 처리 패턴 재사용
+- `docs/context/02-task-list.md` 작업20
+- `docs/context/03-deliverables.md` 5.4절
+- `predictions/prediction_results.json`(작업19 산출물 — 스키마: `model_version`, `model_path`, `inference_config`, `generated_at`, `summary`, `images`(image_name/status/inference_time_ms/predictions[]), `failures`)
+- `src/dataset/build_yolo_dataset.py`(정상 이미지 빈 라벨 파일 관례 참고)
+- `metadata/yolo_classes.txt`
 
 ## 완료 기준 (Definition of Done)
 
-- ( ) 학습이 정상 종료됐다(50 epoch 완주 또는 Early Stopping으로 정상 종료 — 예외로 인한 비정상 종료가 아님).
-- ( ) `best.pt`와 `last.pt`가 생성됐다.
-- ( ) 전체 학습 설정이 기록됐다(`train_config.yaml` = Ultralytics `args.yaml` 그대로).
-- ( ) 학습 로그를 다시 확인할 수 있다(`logs/train.log`).
-- ( ) 결과 폴더가 실험 ID(`EXP-P1-DET-001`) 기준으로 보존된다.
-- ( ) 코드가 PEP 8 / black 포맷을 따른다.
+- `( )` 예측 객체가 TXT에 저장된다(`auto-labels/yolo-labels/*.txt`).
+- `( )` 객체당 한 줄로 생성된다.
+- `( )` 클래스 번호와 좌표가 유효하다(0~5 범위, 정규화 좌표 0~1 범위 — `prediction_results.json`에서 그대로 가져오므로 재계산 없이 값 자체는 이미 유효함을 전제).
+- `( )` Confidence와 모델 정보가 별도로 보존된다(`auto-labels/prediction-metadata/`에 원본 JSON 그대로 + 메타데이터).
+- `( )` 원본 추론 결과를 잃지 않는다(`prediction_results.json` 원본 그대로 복사 보존).
+- `( )` `auto-labels/cvat-import/`가 CVAT YOLO 1.1 Import 형식(`obj.names`, `obj.data`, `train.txt`, `obj_train_data/`)을 갖춘다.
+- `( )` 코드가 PEP 8 / black 포맷을 따른다(ruff 통과).
 
 ## 제약사항
 
-- `ultralytics`, `pyyaml`, 표준 라이브러리만 사용한다.
-- `data/processed/dataset_v1/`, `metadata/`, `reports/`, `configs/` 아래 기존 파일은 읽기만 하고 수정하지 않는다.
-- 함수/모듈 주석은 한글로 작성한다(프로젝트 관례).
-- 이 실행은 CODEX 샌드박스에서 직접 검증할 수 없다(Python 실행 불가) — 코드 작성까지만 CODEX가 담당하고, 실제 학습 실행·결과 확인은 CLAUDE가 `venv/Scripts/python.exe`로 수행한다. **CPU로 50 epoch·209장을 학습하므로 상당한 시간이 걸릴 수 있음을 감안한다.**
+- `predictions/prediction_results.json`, `data/processed/dataset_v1/`, `metadata/`는 읽기만 하고 수정하지 않는다.
+- 이미지 복사는 `shutil.copy2`를 사용한다(심볼릭 링크 금지 — 작업14에서 이미 정한 원칙과 동일).
+- 이 스크립트는 모델을 로드하거나 추론을 실행하지 않는다(순수 파일 재가공). 따라서 CODEX 샌드박스에서도 원칙적으로 실행 가능하지만, 다른 스크립트들과의 일관성을 위해 실제 실행·결과 확인은 CLAUDE가 `venv/Scripts/python.exe`로 수행한다.
 
-## 테스트 방법 및 검증 기준 (CODEX 완료 후 CLAUDE가 이어서 수행)
+## 테스트 방법
 
-1. `venv/Scripts/python.exe src/model/train_baseline.py` 실행(백그라운드, 장시간 소요 가능)
-2. 로그에서 학습이 오류 없이 끝났는지, 몇 epoch에서 종료됐는지(Early Stopping 여부) 확인
-3. `experiments/EXP-P1-DET-001/models/{best.pt,last.pt}` 존재 확인
-4. `experiments/EXP-P1-DET-001/train_config.yaml`(=`args.yaml`)에 실제 설정이 그대로 담겼는지 확인
-5. `experiments/EXP-P1-DET-001/logs/train.log`로 학습 과정을 다시 확인할 수 있는지 확인
-6. `experiments/EXP-P1-DET-001/experiment.yaml`의 `metrics`/`training.actual_batch`/`git_commit` 값이 실제 결과와 일치하는지 확인
-7. `experiments/EXP-P1-DET-001/experiment.md`가 9절까지 채워지고 10절 이후는 "실험 후 작성"으로 골격만 있는지 확인
-8. `docs/context/02-task-list.md` 작업17 완료 조건 5개 충족 여부 확인
+1. `venv/Scripts/python.exe src/model/export_auto_labels.py` 실행
+2. `auto-labels/yolo-labels/` — 파일 46개(이미지 수와 동일), 예측 있는 11개는 내용 있음, 나머지 35개는 0바이트인지 확인
+3. `auto-labels/prediction-metadata/export_metadata.json` — `model_version == "EXP-P1-DET-001"` 확인
+4. `auto-labels/prediction-metadata/prediction_results.json` — 작업19 원본과 내용 동일한지(`diff`) 확인
+5. `auto-labels/cvat-import/obj.names` — 6줄(6클래스), `train.txt` — 46줄, `obj_train_data/` — 이미지 46장 + 라벨 46개 존재 확인
+6. `black --check src/model/export_auto_labels.py`, `ruff check src/model/export_auto_labels.py` 통과 확인

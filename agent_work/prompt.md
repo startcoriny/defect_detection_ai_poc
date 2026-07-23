@@ -1,135 +1,93 @@
-# 구현 지시서: Test 데이터 추론
+# 구현 지시서: 자동 라벨 파일 생성
 
 ## 배경
 
-`docs/context/02-task-list.md` 작업19(Test 데이터 추론), `docs/context/03-deliverables.md` 3.7절(`run_inference.py`)·5.3절(추론 결과 산출물)·6.4절(모델 예측 시각화)에 따라, 작업17에서 만든 Baseline `best.pt`로 Test 46장(정상 15장, porosity 15장, slag_inclusion 16장 — `metadata/selected_dataset.csv` 기준 실측치)을 추론하고 결과를 파일로 저장한다.
+`docs/context/02-task-list.md` 작업20(자동 라벨 파일 생성), `docs/context/03-deliverables.md` 3.7절(`export_auto_labels.py`)·5.4절(자동 라벨 결과 산출물)에 따라, 작업19에서 생성한 `predictions/prediction_results.json`(Test 46장 추론 원본 결과)을 표준 YOLO Detection TXT + 메타데이터 JSON + CVAT Import용 데이터로 정리한다.
 
-**사전 확인한 사실(가정 아님, 실제로 실행해 확인함)**:
-
-- `model.predict(source=<디렉터리 경로>)`처럼 소스가 디렉터리(또는 단일 파일 경로)일 때는 원본 파일명이 그대로 보존된다(작업16 Smoke Test 때 겪은 "소스가 파일 경로 리스트일 때 `image0.jpg`로 저장되는" 문제와는 다른 경우). 따라서 이번 작업은 이미지 리스트가 아니라 **이미지 경로 하나씩** 또는 디렉터리를 소스로 넘긴다.
-- `model.predict(..., save_txt=True)`는 예측이 하나도 없는 이미지(정상 이미지 등)에는 TXT 파일을 만들지 않는다(정상 동작, 버그 아님). 즉 "정상 이미지도 처리된다"는 완료 조건은 TXT 파일 존재 여부가 아니라 **JSON에 결과가 기록되는지**로 판단한다.
-- `model.train()`과 마찬가지로 `model.predict(..., project=...)`도 상대경로를 넘기면 Ultralytics가 `runs/detect/<상대경로>/` 하위에 중첩 저장한다. **반드시 절대경로**를 넘긴다.
+이번 작업은 **새로운 추론을 하지 않는다**. 작업19가 이미 만든 `predictions/prediction_results.json`을 유일한 입력으로 읽어서 재가공만 한다(모델을 다시 로드하거나 이미지를 다시 추론하지 않는다).
 
 ## 기능 및 요구사항
 
-### `src/model/run_inference.py` (신규)
+### `src/model/export_auto_labels.py` (신규)
 
 #### 1. 입력
 
-- 모델: `experiments/EXP-P1-DET-001/models/best.pt` (작업17 Baseline의 best checkpoint)
-- 대상 이미지: `data/processed/dataset_v1/images/test/` 전체(46장, 정상 15장 포함 — 전부 처리 대상)
-- 클래스 이름 매핑: `metadata/yolo_classes.txt` 재사용(재계산 금지)
+- `predictions/prediction_results.json`(작업19 산출물, 유일한 입력)
+- `metadata/yolo_classes.txt`(CVAT `obj.names`용 클래스 이름 목록, 재사용)
 
-#### 2. 추론 실행
+#### 2. `auto-labels/yolo-labels/` 생성
 
-- **개별 이미지 파일 단위로 반복 처리한다**(디렉터리를 한 번에 넘기지 않고, 정렬된 파일 목록을 하나씩 순회). 이유: 한 이미지에서 예외가 나도 나머지 45장 처리를 계속하고 실패 파일만 별도로 기록해야 하는데(완료 조건), 디렉터리를 한 번에 넘기면 배치 중간에 예외가 나면 전체가 중단될 위험이 있다.
-- 이미지 1장마다 `try/except`로 감싸고, 실패 시 파일명과 예외 메시지를 기록한 뒤 다음 이미지로 계속 진행한다(예외를 삼키지 않고 실패 파일명·원인을 함께 기록 — 프로젝트 공통 원칙).
-- 추론 설정(고정값, 절대 다른 값으로 바꾸지 않는다):
-  ```
-  confidence(conf) = 0.25
-  NMS IoU = 0.70
-  imgsz = 640
-  device = cpu
-  ```
-- Ultralytics 호출 시 `save=True, save_txt=True, save_conf=False`(YOLO TXT에는 confidence를 넣지 않는다 — 작업20에서 재사용할 표준 YOLO Detection TXT 형식과 일치시키기 위함), `project=<프로젝트 루트>/outputs/predictions`(절대경로), `name="test"`, `exist_ok=True`.
-- 각 이미지의 추론 시간은 Ultralytics가 반환하는 `result.speed["inference"]`(ms)를 사용한다(콘솔에 이미 "Speed: Xms preprocess, Yms inference, ..." 형태로 출력되는 것과 같은 값 — 새로 계산하지 않는다).
+- Test 46장 **전부에 대해** 이미지 스템(확장자 제외 파일명)과 같은 이름의 `.txt` 파일을 만든다.
+- 예측이 있으면 객체당 한 줄, `class_id center_x center_y width height`(정규화 좌표, `prediction_results.json`의 `bbox_normalized_xywh` 그대로 사용, 소수점 6자리) 형식으로 기록한다.
+- 예측이 없는 이미지(정상 이미지, 미탐 이미지 포함)는 **빈 파일**(0바이트)을 만든다. 파일을 아예 안 만드는 것이 아니다 — 작업14(`build_yolo_dataset.py`)가 이미 "정상 이미지는 빈 라벨 파일"이라는 관례를 세워뒀으므로 그 관례를 따른다(Ultralytics의 `save_txt`가 예측 없는 이미지에 파일을 안 만드는 것과는 다른, 이 프로젝트의 의도적 선택이다).
 
-#### 3. `predictions/prediction_results.json` 생성
+#### 3. `auto-labels/prediction-metadata/` 생성
 
-`docs/context/03-deliverables.md` 5.3절의 "JSON 포함 정보"(원본 이미지명, 모델 버전, 클래스 ID, 클래스명, Confidence, Bounding Box, 정규화 좌표, 추론 시간, 추론 설정)를 전부 포함한다. 스키마:
-
-```json
-{
-  "model_version": "EXP-P1-DET-001",
-  "model_path": "<best.pt 절대경로>",
-  "inference_config": {
+- `export_metadata.json`: `docs/context/02-task-list.md` 작업20의 예시 스키마를 따른다.
+  ```json
+  {
+    "model_version": "EXP-P1-DET-001",
     "confidence_threshold": 0.25,
-    "iou_threshold": 0.70,
-    "imgsz": 640,
-    "device": "cpu"
-  },
-  "generated_at": "<ISO 8601 타임스탬프>",
-  "summary": {
-    "total_images": 46,
-    "succeeded": <int>,
-    "failed": <int>,
-    "total_inference_time_ms": <float>,
-    "avg_inference_time_ms": <float>,
-    "min_inference_time_ms": <float>,
-    "max_inference_time_ms": <float>
-  },
-  "images": [
-    {
-      "image_name": "RT_AL_00_xxxxxxxx.jpg",
-      "status": "success",
-      "inference_time_ms": <float>,
-      "predictions": [
-        {
-          "class_id": 3,
-          "class_name": "porosity",
-          "confidence": 0.8123,
-          "bbox_xyxy": [x1, y1, x2, y2],
-          "bbox_normalized_xywh": [cx, cy, w, h]
-        }
-      ]
-    }
-  ],
-  "failures": [
-    {"image_name": "...", "error": "..."}
-  ]
-}
-```
+    "exported_at": "<ISO 8601, 이 스크립트 실행 시각>",
+    "source": "predictions/prediction_results.json"
+  }
+  ```
+  (`model_version`은 작업19와 동일하게 임의 문자열 `"baseline_v1"` 대신 실제 실험 ID `EXP-P1-DET-001`을 사용한다 — 작업19에서 이미 내린 결정과 일관성 유지.)
+- `prediction_results.json`: 작업19가 만든 원본 파일을 **그대로 복사**한다(추론 시간, 픽셀 좌표, 실패 목록 등 원본 정보를 하나도 잃지 않기 위해 — 완료 조건 "원본 추론 결과를 잃지 않는다"를 문자 그대로 만족).
 
-- 예측이 없는 이미지(정상 이미지 포함)도 `images` 배열에 `"predictions": []`로 반드시 포함한다(빠뜨리지 않는다).
-- `model_version`은 `docs/context/02-task-list.md` 작업20 예시의 `"baseline_v1"` 같은 임의 문자열 대신, 이미 구축된 실험 추적 체계의 실제 식별자인 `EXP-P1-DET-001`을 사용한다(추적 가능성을 위해 실제 실험 기록과 연결).
-- 저장 위치: 프로젝트 루트 기준 `predictions/prediction_results.json`(`docs/context/03-deliverables.md` 5.3절의 최상위 `predictions/` 폴더 관례를 따름 — `experiments/` 하위가 아니다. 이미 `.gitignore`에 `predictions/`가 등록돼 있어 자동으로 커밋에서 제외된다).
+#### 4. `auto-labels/cvat-import/` 생성 (CVAT YOLO 1.1 / Darknet 형식)
 
-#### 4. 산출물 정리
+- `obj.names`: `metadata/yolo_classes.txt`의 6개 클래스 이름을 줄 순서 그대로 복사(클래스 ID = 줄 번호, 프로젝트 전체에서 이미 쓰는 순서와 동일해야 함).
+- `obj.data`:
+  ```
+  classes = 6
+  train = train.txt
+  names = obj.names
+  backup = backup/
+  ```
+- `train.txt`: Test 46장의 상대경로(`obj_train_data/<파일명>`)를 한 줄씩, 파일명 순으로 기록.
+- `obj_train_data/`: Test 46장 이미지(`data/processed/dataset_v1/images/test/`에서 복사, `shutil.copy2` 사용 — 원본은 읽기 전용) + 위 2번에서 만든 것과 동일한 내용의 라벨 TXT(이미지당 1개, 빈 파일 포함) 를 나란히 둔다.
 
-- `predictions/prediction_results.json` — 위 스키마
-- `outputs/predictions/test/` — Ultralytics가 저장한 예측 시각화 이미지(Bounding Box·클래스명·Confidence가 그려진 이미지) + `labels/`(표준 YOLO 형식 TXT, 예측 없는 이미지는 파일 없음 — 정상 동작)
-- 로그 파일: `outputs/predictions/inference.log`(콘솔 + 파일 동시 기록, 기존 스크립트들의 `configure_logging` 패턴과 동일하게)
+## 구현 범위 (In Scope)
 
-## In Scope
+- `src/model/export_auto_labels.py` 신규 작성
+- `auto-labels/{yolo-labels, prediction-metadata, cvat-import}/` 전체 생성
 
-- `src/model/run_inference.py` 신규 작성
-- Test 46장 전체 추론, `prediction_results.json` 생성, Ultralytics 예측 시각화 이미지·TXT 생성, 로그 기록
-- 실패 이미지 처리(try/except, `failures` 배열 기록) — 실제로 실패가 발생하지 않더라도 이 처리 경로 자체는 반드시 구현
+## 구현 제외 범위 (Out of Scope)
 
-## Out of Scope
-
-- 자동 라벨 파일(YOLO TXT + 메타데이터 JSON을 `auto-labels/`로 정리하는 것)은 작업20의 범위이며 이번 작업에서 만들지 않는다.
-- Confidence Threshold 비교(작업22), 성능 평가/Confusion Matrix(작업23), 오탐·미탐 분석(작업24)은 이번 작업 범위가 아니다.
-- `configs/inference_baseline.yaml` 같은 별도 설정 파일은 만들지 않는다(작업17의 `train_baseline.py`도 하이퍼파라미터를 스크립트에 직접 하드코딩했고, 1회성 스크립트에 설정 파일을 분리하는 것은 이번 규모에서 불필요한 추상화 — `CLAUDE.md` Simplicity First 원칙).
+- 실제 CVAT 서버에 Import해서 검증하는 것(작업21의 범위, "가능하면" 수행하는 선택 사항이며 1차 PoC 필수 범위 밖).
+- 새로운 모델 추론, Confidence Threshold 비교(작업22), 시각화 재생성(작업21) — 전부 이번 작업 범위가 아니다.
+- `predictions/prediction_results.json` 자체를 수정하는 것 — 읽기 전용으로 참조만 한다.
 
 ## 작업 전 확인해야 하는 문서/코드
 
-- `docs/context/02-task-list.md` 작업19
-- `docs/context/03-deliverables.md` 5.3절, 6.4절
-- `src/model/smoke_test.py`의 `run_prediction()` (list-source 저장 파일명 버그 사례 — 이번엔 개별 파일 경로를 쓰므로 해당 없음을 확인하는 참고용)
-- `metadata/yolo_classes.txt`, `experiments/EXP-P1-DET-001/models/best.pt`
+- `docs/context/02-task-list.md` 작업20
+- `docs/context/03-deliverables.md` 5.4절
+- `predictions/prediction_results.json`(작업19 산출물 — 스키마: `model_version`, `model_path`, `inference_config`, `generated_at`, `summary`, `images`(image_name/status/inference_time_ms/predictions[]), `failures`)
+- `src/dataset/build_yolo_dataset.py`(정상 이미지 빈 라벨 파일 관례 참고)
+- `metadata/yolo_classes.txt`
 
 ## 완료 기준 (Definition of Done)
 
-- `( )` Test 46장 전체가 처리된다(성공 또는 실패로 기록, 누락 없음).
-- `( )` 정상 이미지(15장)도 `predictions: []`로 JSON에 기록된다.
-- `( )` 예측 좌표(픽셀 xyxy, 정규화 xywh)와 클래스(ID+이름)가 추출된다.
-- `( )` 예측 결과가 `predictions/prediction_results.json`, `outputs/predictions/test/`(이미지+TXT)로 파일 저장된다.
-- `( )` 실패한 파일이 있으면 `failures` 배열에 파일명·원인과 함께 별도로 기록된다(예외를 삼키지 않는다).
+- `( )` 예측 객체가 TXT에 저장된다(`auto-labels/yolo-labels/*.txt`).
+- `( )` 객체당 한 줄로 생성된다.
+- `( )` 클래스 번호와 좌표가 유효하다(0~5 범위, 정규화 좌표 0~1 범위 — `prediction_results.json`에서 그대로 가져오므로 재계산 없이 값 자체는 이미 유효함을 전제).
+- `( )` Confidence와 모델 정보가 별도로 보존된다(`auto-labels/prediction-metadata/`에 원본 JSON 그대로 + 메타데이터).
+- `( )` 원본 추론 결과를 잃지 않는다(`prediction_results.json` 원본 그대로 복사 보존).
+- `( )` `auto-labels/cvat-import/`가 CVAT YOLO 1.1 Import 형식(`obj.names`, `obj.data`, `train.txt`, `obj_train_data/`)을 갖춘다.
 - `( )` 코드가 PEP 8 / black 포맷을 따른다(ruff 통과).
 
 ## 제약사항
 
-- `project=`에는 반드시 절대경로를 사용한다(상대경로 시 `runs/detect/` 하위 중첩 버그, 사전 확인함).
-- 이미지는 리스트가 아니라 **개별 경로 하나씩** 소스로 넘긴다(디렉터리 일괄 처리 시 예외 발생하면 전체 중단 위험).
-- `data/raw`, `data/processed`, `metadata/`, `experiments/EXP-P1-DET-001/models/best.pt`는 읽기만 하고 수정하지 않는다.
-- 이 스크립트는 CODEX 샌드박스에서 직접 실행·검증할 수 없다(Python 실행 불가, 알려진 제약). 코드 작성까지만 CODEX가 담당하고, 실제 추론 실행·결과 확인은 CLAUDE가 `venv/Scripts/python.exe`로 수행한다.
+- `predictions/prediction_results.json`, `data/processed/dataset_v1/`, `metadata/`는 읽기만 하고 수정하지 않는다.
+- 이미지 복사는 `shutil.copy2`를 사용한다(심볼릭 링크 금지 — 작업14에서 이미 정한 원칙과 동일).
+- 이 스크립트는 모델을 로드하거나 추론을 실행하지 않는다(순수 파일 재가공). 따라서 CODEX 샌드박스에서도 원칙적으로 실행 가능하지만, 다른 스크립트들과의 일관성을 위해 실제 실행·결과 확인은 CLAUDE가 `venv/Scripts/python.exe`로 수행한다.
 
 ## 테스트 방법
 
-1. `venv/Scripts/python.exe src/model/run_inference.py` 실행
-2. `predictions/prediction_results.json` — `summary.total_images == 46`, `images` 배열 길이 46, 정상 이미지 항목의 `predictions == []`인지 확인
-3. `outputs/predictions/test/` — 예측이 있는 이미지에 Bounding Box가 그려진 이미지 파일 존재 확인
-4. `outputs/predictions/test/labels/` — 예측이 있는 이미지만 TXT 존재(개수가 `summary`의 성공+예측 있는 이미지 수와 일치하는지)
-5. `outputs/predictions/inference.log` — 46장 처리 로그, 실패 발생 시 실패 로그 확인
-6. `black --check src/model/run_inference.py`, `ruff check src/model/run_inference.py` 통과 확인
+1. `venv/Scripts/python.exe src/model/export_auto_labels.py` 실행
+2. `auto-labels/yolo-labels/` — 파일 46개(이미지 수와 동일), 예측 있는 11개는 내용 있음, 나머지 35개는 0바이트인지 확인
+3. `auto-labels/prediction-metadata/export_metadata.json` — `model_version == "EXP-P1-DET-001"` 확인
+4. `auto-labels/prediction-metadata/prediction_results.json` — 작업19 원본과 내용 동일한지(`diff`) 확인
+5. `auto-labels/cvat-import/obj.names` — 6줄(6클래스), `train.txt` — 46줄, `obj_train_data/` — 이미지 46장 + 라벨 46개 존재 확인
+6. `black --check src/model/export_auto_labels.py`, `ruff check src/model/export_auto_labels.py` 통과 확인

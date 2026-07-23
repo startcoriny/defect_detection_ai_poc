@@ -1,122 +1,120 @@
-# 구현 지시서: Train·Validation·Test 분할
+# 구현 지시서: YOLO 학습 데이터셋 구성
 
 ## 배경
 
-`docs/context/02-task-list.md` 작업13(Train·Validation·Test 분할)과 `docs/context/03-deliverables.md` 3.6절에 따라, 작업8에서 선별한 299장을 70/15/15 비율로 분할한다.
+`docs/context/02-task-list.md` 작업14(YOLO 학습 데이터셋 구성)와 `docs/context/03-deliverables.md` 2.5절·3.6절에 따라, 작업13에서 확정한 분할(`train`/`val`/`test`)대로 이미지·라벨 파일을 YOLO 표준 폴더 구조로 배치하고 `data.yaml`을 생성한다.
 
-**대상 범위**: `metadata/selected_dataset.csv`의 `selected == True` 299장.
+**대상 범위**: `metadata/selected_dataset.csv`의 `selected == True` 299장 전체(정상 이미지 포함, `split_group` 컬럼은 작업13에서 이미 채워짐: train 209 / val 44 / test 46).
 
-**참고**: `metadata/selected_dataset.csv`에는 작업8에서 이미 채워진 `group` 컬럼(`normal`/`porosity`/`slag_inclusion`/`both`, 값: normal 100 / porosity 99 / slag_inclusion 99 / both 1)과, 작업8 당시 비워둔 `split_group` 컬럼이 있다("이후 `split_dataset.py`가 채울 예정"이라고 작업8에서 이미 명시됨). 이번 작업은 이 `group` 컬럼과 아래 정의할 객체 크기 기준을 함께 층화 기준으로 사용해 `split_group` 컬럼을 채운다.
+**참고 1 — 저장 위치**: `docs/context/02-task-list.md`는 예시로 `dataset/`(저장소 루트)를 보여주지만, `docs/context/03-deliverables.md` 2.5절과 `CLAUDE.md`의 Storage 정의(`data/processed`: 변환 결과)는 `data/processed/dataset_v1/`을 사용한다. 기존 프로젝트 구조 관례를 따라 `data/processed/dataset_v1/`을 사용한다(`.gitignore`에 이미 `/data/`가 등록되어 있어 별도 gitignore 수정 없이 자동으로 커밋 제외됨).
 
-`docs/context/02-task-list.md`의 분할 고려사항 중 "동일 그룹 데이터"는 이 프로젝트에 이미지 단위의 별도 물리적 그룹 메타데이터(예: 동일 용접부 연속 촬영본 식별자)가 없으므로, 작업8이 이미 정의한 `group` 컬럼(정상/porosity/slag_inclusion/both)을 층화 기준으로 삼는 것으로 해석한다(다른 2개 고려사항 — 클래스별 이미지·객체 수, 정상 이미지 비율 — 도 전부 이 `group` 층화로 자연히 충족됨).
+**참고 2 — 클래스 매핑**: `docs/context/02-task-list.md`의 `data.yaml` 예시는 `0: porosity, 1: slag_inclusion` 2-클래스이지만, 이 프로젝트는 작업6에서 6개 표준 클래스(`class_id` 0~5)를 확정했고 이후 모든 산출물(`class_statistics.csv`, `bbox_annotations.csv`, `yolo_classes.txt`)이 이 6-클래스 체계를 그대로 써왔다. `data.yaml`의 `names`도 `metadata/yolo_classes.txt`(class_id 0~5 순서)를 그대로 재사용해 6개 클래스 전부를 담는다 — 재계산·재배정하지 않는다.
 
-**2단계 층화(그룹×크기)**: `group`만으로 층화한 1차 시도에서 분할 간 작은 객체 비율이 크게 벌어지는 문제(train 55.80% / val 62.32% / test 79.79%, 범위 24%p)가 실제로 발견되어, 이번 작업은 `group`에 더해 이미지 단위 크기 특성도 층화 기준에 포함한다(아래 3절 참고).
+**참고 3 — 파일 배치 방식**: task-list는 "복사 또는 Symbolic Link 둘 다 가능"이라고 하지만, 이번 구현은 **복사(copy)** 를 사용한다. Windows에서 심볼릭 링크는 개발자 모드/관리자 권한이 필요해 팀원 환경마다 동작이 다를 수 있고, 이 PoC 규모(299장)에서는 복사에 따른 디스크 사용량 증가가 감수할 만하다.
 
 ## 기능 및 요구사항
 
-### `src/dataset/split_dataset.py` (신규)
+### `src/dataset/build_yolo_dataset.py` (신규)
 
 #### 1. 입력 데이터
 
-- `metadata/selected_dataset.csv`: `selected == "True"` 299장, `group`/`duplicate` 컬럼 재사용
-- `metadata/bbox_annotations.csv`: 분할별 클래스 통계 계산용(작업9 결과, 재계산 없음)
-- `metadata/class_statistics.csv`: 표준 클래스 6개 고정 목록
+- `metadata/selected_dataset.csv`: `selected == "True"` 299장의 `image_name`, `split_group`(train/val/test)
+- `metadata/raw_dataset_inventory.csv`: `image_path`(원본 이미지 경로, 전부 `.jpg`)
+- `outputs/yolo_labels/{image_name}.txt`: 작업10이 생성한 YOLO 라벨(정상 이미지는 빈 파일 포함, 299개 전부 존재해야 함)
+- `metadata/yolo_classes.txt`: `data.yaml`의 `names`에 그대로 사용(재계산 없음)
 
-#### 2. 중복 이미지 사전 확인
-
-선택된 299장 중 `duplicate == "True"`인 행이 있으면 실행을 중단하고 오류를 낸다(`ValueError`) — 이 프로젝트의 299장에는 실제로 0건이지만(작업5/8에서 이미 확인됨), 중복 이미지를 서로 다른 분할에 나누는 로직은 이번 구현에 없으므로 발생 시 조용히 진행하지 않고 명시적으로 실패시킨다.
-
-#### 3. 그룹×크기 2단계 층화 분할 (Seed 42, 비율 70/15/15)
-
-**이미지별 크기 특성(`size_class`) 계산** — `bbox_annotations.csv`에서 이미지별 객체들의 `relative_area = (box_width/image_width) * (box_height/image_height)`를 계산(작업12와 동일 정의)하고, 각 이미지에 대해:
-
-- `relative_area < 0.01`인 객체 수가 그 이미지 전체 객체 수의 절반 이상이면 `size_class = "small_dominant"`
-- 그렇지 않으면(객체가 있는데 절반 미만) `size_class = "mixed"`
-- `group == "normal"`인 이미지(객체 없음)는 `size_class`를 매기지 않는다(크기 층화 대상이 아님).
-
-**층화 키**: `group == "normal"`이면 층화 키는 `("normal",)` 그대로. 그 외(`porosity`, `slag_inclusion`, `both`)는 층화 키를 `(group, size_class)`로 세분화한다. 예상되는 층화 키와 실제 이미지 수(검증용, 실제 계산값과 비교):
+#### 2. 폴더 구조 생성 및 파일 배치
 
 ```
-("normal",)                        100
-("porosity", "small_dominant")      77
-("porosity", "mixed")               22
-("slag_inclusion", "small_dominant") 30
-("slag_inclusion", "mixed")          69
-("both", "mixed")                    1
+data/processed/dataset_v1/
+├── images/
+│   ├── train/  (209장)
+│   ├── val/    (44장)
+│   └── test/   (46장)
+├── labels/
+│   ├── train/  (209개)
+│   ├── val/    (44개)
+│   └── test/   (46개)
+└── data.yaml
 ```
 
-- 위 6개 층화 키를 문자열로 이어붙인 값(`"normal"`, `"porosity_mixed"` 등) 기준 **알파벳순**으로 고정 순회한다: `both_mixed` → `normal` → `porosity_mixed` → `porosity_small_dominant` → `slag_inclusion_mixed` → `slag_inclusion_small_dominant`.
-- 각 층화 키 그룹마다 소속 `image_name`을 오름차순 정렬한 뒤, **하나의 `random.Random(42)` 인스턴스**로(전체 스크립트에서 단 하나의 인스턴스를 재사용) `rng.shuffle()`을 적용한다.
-- 그룹 크기 `N`에 대해: `n_train = round(N * 0.70)`, `n_val = round(N * 0.15)`, `n_test = N - n_train - n_val`(나머지 전부, 반올림 오차를 test가 흡수).
-- 셔플된 순서대로 앞에서부터 `n_train`개는 `train`, 다음 `n_val`개는 `val`, 나머지는 `test`로 배정한다.
+- 각 선택 이미지를 `split_group` 값에 따라 `images/{split}/{image_name}.jpg`로 복사(원본은 전부 `.jpg`).
+- 대응하는 `outputs/yolo_labels/{image_name}.txt`를 `labels/{split}/{image_name}.txt`로 복사.
+- 복사 후 각 파일 쌍을 원본과 대조해 무결성을 확인한다(파일 크기 또는 해시 비교 — 내용이 원본과 다르면 오류로 기록하고 실행을 실패시킨다).
+- 소스 라벨 파일이 없는 선택 이미지가 있으면(작업10 미실행 등) 명확한 오류 메시지와 함께 실행을 중단한다.
 
-#### 4. 산출물 갱신·생성
+#### 3. `data.yaml` 생성 (PyYAML 사용, `sort_keys=False`로 순서 보존)
 
-**`metadata/selected_dataset.csv`의 `split_group` 컬럼을 채워서 같은 파일에 덮어쓴다** — 이 컬럼은 작업8에서 이번 작업을 위해 의도적으로 비워둔 자리이므로, 다른 모든 컬럼과 값은 그대로 두고 `split_group`만 `train`/`val`/`test`로 채운다(다른 metadata 파일은 계속 읽기 전용).
+```yaml
+path: data/processed/dataset_v1
+train: images/train
+val: images/val
+test: images/test
 
-`splits/train.txt`, `splits/val.txt`, `splits/test.txt` (신규 폴더): 각 파일에 해당 분할의 `image_name`을 오름차순 한 줄씩 기록(파일당 이미지 수 예상값: train209/val44/test46, 위 6개 층화 키에 대한 반올림 배분 합계).
-
-`reports/dataset/split_distribution.csv`: 분할×표준 클래스 6개 전부(18행), 컬럼:
-
+names:
+  0: crack
+  1: incomplete_penetration
+  2: lack_of_fusion
+  3: porosity
+  4: slag_inclusion
+  5: undercut
 ```
-split, class_id, class_name, image_count, object_count
-```
 
-(작업12의 `class_distribution.csv`와 동일한 집계 방식을 분할별로 반복 — 미등장 클래스는 0,0)
+(`names`는 `metadata/yolo_classes.txt`를 순서대로 읽어 `{index: class_name}`으로 채운다.)
 
-`reports/dataset/split_validation_report.md`: 한글 서술 보고서. 다음을 포함한다:
+#### 4. 검증 및 로그
 
-- 분할별 이미지 수·비율(목표 70/15/15 대비 실제 값)
-- 분할별 정상 이미지 수(0이면 안 됨)
-- 분할별 대상 클래스(`porosity`, `slag_inclusion`) 이미지 수(0이면 안 됨)
-- **분할×층화 키(그룹×크기) 이미지 수 표** — 6개 층화 키가 각 분할에 어떻게 배분됐는지 표로 표시
-- 분할별 작은 객체(작업12 기준 `relative_area < 0.01`) **객체 단위** 비율과, 세 분할 간 비율 범위(최댓값-최솟값). 이전 `group`만으로 층화했을 때의 범위(24.0%p, train 55.80%/val 62.32%/test 79.79%)를 함께 적어 이번 그룹×크기 층화로 범위가 줄었는지 비교 서술한다.
-- 중복 이미지 검사 결과(0건 확인)
-- Random Seed(42) 명시
-- "동일 이미지가 여러 분할에 속하지 않음"을 코드로 재확인한 결과(교집합 크기 0)
+다음을 코드로 확인하고 위반 시 실행을 실패시킨다:
+
+- 각 분할에서 `images/{split}/`와 `labels/{split}/`의 파일 수가 정확히 같다(확장자만 다른 동일 basename 쌍).
+- 분할별 합계가 209/44/46(작업13 결과)과 일치한다.
+- `data.yaml`의 `names` 6개가 `metadata/yolo_classes.txt`의 순서·내용과 정확히 같다.
+- `data.yaml`에 적힌 `path`/`train`/`val`/`test` 경로를 프로젝트 루트 기준으로 조합했을 때 실제로 존재하는 디렉터리인지 확인한다.
+- 정상 이미지(라벨 파일이 빈 파일인 것)가 배치된 데이터셋에도 그대로 포함되어 있는지 확인한다(제외되지 않았는지).
+
+`logging`으로: 분할별 이미지·라벨 파일 수, 전체 복사 파일 수, `data.yaml` 검증 결과, 정상 이미지 수를 남긴다.
 
 ## 구현 범위 (In Scope)
 
-- `src/dataset/split_dataset.py` 신규 생성
-- `metadata/selected_dataset.csv`의 `split_group` 컬럼 갱신(유일하게 허용되는 기존 파일 수정)
-- `splits/{train,val,test}.txt`, `reports/dataset/{split_distribution.csv, split_validation_report.md}` 신규 생성
+- `src/dataset/build_yolo_dataset.py` 신규 생성
+- `data/processed/dataset_v1/` 전체(스크립트 실행 결과물 — CODEX가 미리 만들지 않는다)
 
 ## 구현 제외 범위 (Out of Scope)
 
-- `build_yolo_dataset.py`(작업14, `data/processed/dataset_v1/` 폴더 구조·이미지 파일 복사) — 이번 작업은 텍스트 목록만 생성한다.
-- `verify_split.py` — 별도 스크립트로 만들지 않는다. 검증은 이번 스크립트 안에서 수행하고 결과를 `split_validation_report.md`에 기록한다(작업7·9·11과 동일하게 한 작업은 한 스크립트로 구현).
-- `metadata/selected_dataset.csv`의 `split_group` 외 다른 컬럼 변경, 다른 metadata 파일 수정.
+- `verify_split.py` — 별도 스크립트로 만들지 않는다(작업13과 동일하게 검증은 이번 스크립트 안에서 수행).
+- `data/raw`, `outputs/yolo_labels/`, `metadata/*.csv` 등 기존 입력 파일 수정 — 전부 읽기 전용.
+- 심볼릭 링크 지원 — 이번 구현은 복사만 한다.
+- 작업15(데이터셋 최종 검증) 이후 단계.
 
 ## 작업 전 반드시 확인해야 하는 문서
 
-- `docs/context/02-task-list.md` 672~721줄(작업13: 수행 작업, 분할 고려사항, 산출물, 완료 조건)
-- `docs/context/03-deliverables.md` 356~373줄(3.6 데이터 분할 코드)
-- `metadata/selected_dataset.csv`(특히 `group`, `duplicate`, `split_group` 컬럼), `metadata/bbox_annotations.csv`, `metadata/class_statistics.csv`
-- `src/data/analyze_statistics.py` — 클래스별 이미지·객체 수 집계 로직 재사용
+- `docs/context/02-task-list.md` 724~770줄(작업14: 수행 작업, 산출물, 완료 조건)
+- `docs/context/03-deliverables.md` 175~211줄(2.5 변환된 YOLO Detection 데이터셋), 356~373줄(3.6 데이터 분할 코드)
+- `metadata/selected_dataset.csv`(`split_group` 컬럼), `metadata/raw_dataset_inventory.csv`, `metadata/yolo_classes.txt`, `outputs/yolo_labels/*.txt`
 
 ## 완료 기준 (Definition of Done)
 
-- ( ) 동일 이미지가 여러 분할에 없다(교집합 0, 코드로 검증).
-- ( ) 중복 이미지가 없음을 확인했다(있었다면 실행이 실패해야 함).
-- ( ) 각 분할(train/val/test)에 정상 이미지가 1장 이상 포함된다.
-- ( ) 각 분할에 `porosity`, `slag_inclusion` 이미지가 1장 이상 존재한다.
-- ( ) 동일 Seed(42)로 재실행하면 동일한 분할이 나온다(재현성).
-- ( ) 그룹×크기 2단계 층화 결과, 분할 간 작은 객체 비율 범위가 이전(24.0%p)보다 줄었다.
+- ( ) 각 분할의 이미지 수와 라벨 수가 정확히 같다(209/44/46).
+- ( ) 폴더 구조가 `images/{train,val,test}`, `labels/{train,val,test}` YOLO 표준 형식에 맞는다.
+- ( ) `data.yaml`의 클래스 매핑이 `yolo_classes.txt`와 정확히 일치한다.
+- ( ) `data.yaml`의 `path`/`train`/`val`/`test` 경로가 실제 존재하는 디렉터리를 가리킨다.
+- ( ) 정상 이미지도 배치된 데이터셋에 포함된다(제외되지 않음).
+- ( ) 재실행해도 동일한 결과가 나온다(재현성 — 무작위 요소 없음, 파일 복사이므로 내용 동일).
 - ( ) 코드가 PEP 8 / black 포맷을 따른다.
 
 ## 제약사항
 
-- 표준 라이브러리(`csv`, `random`, `logging`, `pathlib`) + 기존 `src/common/*` 유틸만 사용한다.
-- **예외적으로 `metadata/selected_dataset.csv`의 `split_group` 컬럼만 갱신을 허용한다.** 그 외 모든 metadata 파일과 `selected_dataset.csv`의 다른 컬럼은 읽기 전용으로 취급한다.
+- 표준 라이브러리(`csv`, `shutil`, `logging`, `pathlib`) + `pyyaml`(이미 `requirements.txt`에 있음) + 기존 `src/common/*` 유틸만 사용한다. 이미지를 디코딩할 필요가 없으므로 `opencv-python`은 사용하지 않는다.
+- `metadata/`, `outputs/`, `data/raw` 아래 기존 파일은 읽기만 하고 수정하지 않는다.
 - 함수/모듈 주석은 한글로 작성한다(프로젝트 관례).
 
 ## 테스트 방법 및 검증 기준 (CODEX 완료 후 CLAUDE가 이어서 수행)
 
-1. `venv/Scripts/python.exe src/dataset/split_dataset.py` 실행
-2. `wc -l splits/train.txt splits/val.txt splits/test.txt` → 예상 209/44/46 (그룹×크기 6개 층화 키 반올림 배분 합계)
-3. `metadata/selected_dataset.csv`에서 `split_group` 값이 `selected=True`인 299행 전부 채워졌는지, `selected=False` 행은 그대로 빈 값인지 확인
-4. `reports/dataset/split_distribution.csv`에서 `porosity`/`slag_inclusion`이 3개 분할 모두 `image_count > 0`인지 확인
-5. `splits/train.txt` ∩ `splits/val.txt` ∩ `splits/test.txt` 교집합이 빈 집합인지 확인
-6. `split_validation_report.md`의 작은 객체 비율 범위가 이전 24.0%p보다 줄었는지 확인
-7. 재실행 후 `splits/*.txt`, `selected_dataset.csv`의 `split_group` 컬럼, `reports/dataset/*`가 모두 동일한지 확인
-8. `docs/context/02-task-list.md` 작업13 완료 조건 5개 충족 여부 확인
+1. `venv/Scripts/python.exe src/dataset/build_yolo_dataset.py` 실행
+2. `find data/processed/dataset_v1/images -type f | wc -l` → 299, `labels` 동일 → 299
+3. 분할별 개수(`images/train`, `images/val`, `images/test`) → 209/44/46
+4. `data/processed/dataset_v1/data.yaml` 내용이 `names` 6개(`metadata/yolo_classes.txt`와 순서 일치) 포함하는지 확인
+5. 정상 이미지 하나(`RT_AL_00_14483440`)가 `images/{split}/`와 `labels/{split}/`(빈 파일)에 실제로 존재하는지 확인
+6. 임의 이미지 하나를 골라 `data/processed/dataset_v1/images/{split}/{name}.jpg`가 원본(`data/raw/...`)과 파일 크기가 같은지 확인
+7. 재실행 후 산출물이 동일한지 확인
+8. `docs/context/02-task-list.md` 작업14 완료 조건 5개 충족 여부 확인

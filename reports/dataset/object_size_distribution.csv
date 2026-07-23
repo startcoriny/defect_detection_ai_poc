@@ -1,0 +1,10 @@
+class_name,size_bucket,count,percentage
+all,Small,272,61.96
+all,Medium,158,35.99
+all,Large,9,2.05
+porosity,Small,201,83.40
+porosity,Medium,38,15.77
+porosity,Large,2,0.83
+slag_inclusion,Small,71,35.86
+slag_inclusion,Medium,120,60.61
+slag_inclusion,Large,7,3.54

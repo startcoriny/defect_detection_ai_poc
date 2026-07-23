@@ -1,0 +1,14 @@
+key,value
+total_images,299
+normal_images,100
+defect_images,199
+total_objects,439
+avg_objects_per_image,1.468227
+avg_objects_per_defect_image,2.206030
+multi_object_images,99
+multi_class_images,1
+distinct_resolutions,65
+image_width_min,1280
+image_width_max,4000
+image_height_min,720
+image_height_max,1272

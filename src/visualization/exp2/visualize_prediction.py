@@ -167,6 +167,7 @@ def save_image(image: np.ndarray, output_path: Path) -> None:
 
 # 불일치 결과를 고정된 컬럼 순서로 저장합니다.
 def write_mismatches(rows: list[dict[str, Any]]) -> None:
+    MISMATCHES_PATH.parent.mkdir(parents=True, exist_ok=True)
     with MISMATCHES_PATH.open("w", encoding="utf-8", newline="") as csv_file:
         writer = csv.DictWriter(csv_file, fieldnames=MISMATCH_FIELDS)
         writer.writeheader()

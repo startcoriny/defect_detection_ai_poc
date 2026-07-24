@@ -1,81 +1,84 @@
-# 구현 지시서: 모델 성능 평가
+# 구현 지시서: 오탐·미탐 분석 — 사례 수집
 
 ## 배경
 
-`docs/context/02-task-list.md` 작업23(모델 성능 평가), `docs/context/03-deliverables.md`(`src/evaluation/` 모듈, `docs/commands.md` 예시 `python src/evaluation/calculate_metrics.py`)에 따라, Baseline `best.pt`를 Confidence 0.25(작업22에서 유지하기로 한 후보값)로 고정해 Test 46장에 대한 공식 평가를 수행한다.
+`docs/context/02-task-list.md` 작업24(오탐·미탐 분석), `docs/context/03-deliverables.md` 3.8절(`collect_error_cases.py`)·7.8절(`docs/08_error_analysis.md`)에 따라, 작업23의 평가 조건(conf=0.25, IoU 0.5, Test 46장)에서 실패 사례(오탐/미탐/클래스 오류/위치 오류)를 자동으로 분류하고 이미지와 함께 저장한다.
 
-**평가 IoU 기준**: 문서에 구체적 숫자가 없어, mAP50이 이미 이 프로젝트 전체에서 핵심 지표로 계속 쓰여온 점(작업17~22)과 일관되게 **IoU 0.5**를 매칭 기준으로 사용한다(새 값을 임의로 만들지 않는다).
-
-**"객체 크기별 성능"은 Ultralytics가 기본 제공하지 않는다** — `model.val()`은 전체·클래스별 지표는 주지만 객체 크기(Small/Medium/Large)로 나눈 지표는 없다. 이 부분만 직접 IoU 매칭을 구현해야 한다(그 외 전체·클래스별 지표는 기존처럼 Ultralytics를 그대로 재사용한다).
+**이번 작업의 역할 분담**: 이 스크립트는 실패 사례를 **객관적으로 분류·저장**하는 것까지만 한다. "정상 패턴 오인"·"흐릿한 결함"처럼 이미지를 직접 보고 판단해야 하는 정성적 원인 분류는 스크립트가 하지 않는다 — CLAUDE가 저장된 사례 이미지를 직접 검토해 `docs/08_error_analysis.md`(작업24의 최종 보고서, deliverables.md 7.8절에 명시된 경로)에 작성한다.
 
 ## 기능 및 요구사항
 
-### `src/evaluation/calculate_metrics.py` (신규)
+### `src/evaluation/collect_error_cases.py` (신규)
 
-#### 1. 전체·클래스별 지표 (Ultralytics 재사용, 재구현 금지)
+#### 1. 입력
 
-`model.val(data="data/processed/dataset_v1/data.yaml", split="test", conf=0.25, iou=0.70, imgsz=640, device="cpu", plots=True, project=<절대경로>, name="evaluation", exist_ok=True)` 1회 호출로 다음을 얻는다:
+- 모델: `experiments/EXP-P1-DET-001/models/best.pt`, 설정: conf=0.25, iou=0.70, imgsz=640, device=cpu(작업19~23과 동일)
+- GT: `data/processed/dataset_v1/labels/test/*.txt`(작업23과 동일한 방식으로 로드, 크기 버킷 포함)
+- 이미지: `data/processed/dataset_v1/images/test/`
+- 매칭 IoU 기준: 0.5(작업23과 동일)
 
-- 전체: `metrics.box.mp`(Precision), `metrics.box.mr`(Recall), `metrics.box.map50`, `metrics.box.map`(=mAP50-95)
-- 클래스별: `metrics.box.p`, `metrics.box.r`, `metrics.box.ap50`, `metrics.box.ap`(배열, `metrics.ap_class_index`로 클래스 ID와 매칭 — 활성 클래스만 포함되므로 `metadata/yolo_classes.txt`로 이름 변환)
-- Confusion Matrix: `metrics.confusion_matrix`(작업22와 동일한 방식), 이미지는 `model.val()`이 `plots=True`일 때 `<project>/evaluation/confusion_matrix.png`에 자동 저장하므로 그대로 둔다(다시 그리지 않는다).
+#### 2. 4단계 매칭 (작업23보다 세분화— 클래스 오류·위치 오류를 별도로 구분)
 
-#### 2. 객체 크기별 성능 (직접 구현)
+작업23의 매칭은 "같은 클래스 + IoU 0.5 이상"만 TP로 보고 나머지는 전부 FP 또는 FN으로 뭉뚱그렸다. 이번엔 그 "나머지"를 아래처럼 세분화한다(이미지 1장 안에서 순서대로 처리):
 
-작업12에서 이미 정한 기준을 그대로 재사용한다: `Small: relative_area<0.01`, `Medium: 0.01~0.05`, `Large: >=0.05`(`relative_area = 정규화 width * height`, 새로 정의하지 않는다).
+1. **정답(TP)**: 같은 클래스 + IoU≥0.5로 매칭된 쌍. 저장 대상 아님(에러가 아니므로).
+2. **wrong_class(클래스 오류)**: 1번에서 매칭 안 된 예측과 GT 중, 클래스가 달라도 IoU≥0.5인 쌍이 있으면 그 쌍을 매칭해 `wrong_class`로 분류(둘 다 소모).
+3. **localization_error(위치 오류)**: 남은 것 중 같은 클래스이면서 0.1≤IoU<0.5인 쌍이 있으면 그 쌍을 매칭해 `localization_error`로 분류(둘 다 소모). (0.1이라는 하한은 문서에 없어 "전혀 안 겹침"과 "애매하게 겹침"을 구분하기 위해 임의로 정한 값 — `docs/08_error_analysis.md`에 이 기준을 명시한다.)
+4. 그래도 안 남은 예측 → **false_positive**, 안 남은 GT → **false_negative**.
 
-절차:
+각 이미지 안에서 여러 후보가 있을 경우 Confidence 높은 예측부터, 그 예측이 매칭 가능한 후보 중 IoU가 가장 높은 것과 매칭한다(그리디, 작업23과 동일한 방식).
 
-1. `data/processed/dataset_v1/labels/test/*.txt`(YOLO 형식, 46개 — 없는 파일은 없어야 함)를 읽어 이미지별 GT 객체 목록(class_id, 정규화 xywh, `relative_area = w*h`, 크기 버킷)을 만든다.
-2. Test 이미지 46장을 개별 파일 경로로 순회하며(작업19~22와 동일한 개별 처리 패턴) `model.predict(source=<단일 이미지>, conf=0.25, iou=0.70, imgsz=640, device="cpu")`로 예측을 얻는다(실제 배포 경로와 동일한 single-label 방식 — 작업22에서 확인한 `val()`의 multi-label 방식과 섞지 않는다).
-3. 이미지마다 GT와 Prediction을 IoU 0.5·클래스 일치 기준으로 매칭한다(그리디: Confidence 높은 예측부터, 같은 클래스의 아직 안 매칭된 GT 중 IoU가 가장 높고 0.5 이상인 것과 매칭 → TP, 매칭 실패 → FP). IoU는 픽셀 좌표로 변환해 계산한다(예측은 `result.boxes.xyxy`로 이미 픽셀 좌표, GT는 `result.orig_shape`(이미지 높이·너비, 이미 예측 결과에 포함되어 있으므로 이미지를 다시 읽지 않는다)로 정규화 좌표를 픽셀로 변환).
-4. 매칭된 GT(TP)는 그 GT의 크기 버킷에 집계하고, 매칭 안 된 GT(FN)도 그 GT의 크기 버킷에 집계한다. 버킷별 `Recall = TP / (TP + FN)`을 계산한다(FP는 배경에 대한 오탐이라 크기 버킷이 없으므로, 버킷별 결과는 Recall 위주로 보고한다 — Precision을 억지로 버킷에 끼워 맞추지 않는다).
-5. `reports/evaluation/object_size_performance.csv`(컬럼: `size_bucket, gt_count, tp, fn, recall`)로 저장.
+#### 3. 각 사례에 대해 객관적으로 계산 가능한 보조 정보(정성 판단 아님)
 
-#### 3. 산출물 저장
+- `confidence`: 예측이 있으면 그 값, 없으면 공란(false_negative)
+- `gt_size_bucket`: GT가 있으면 작업12 기준(Small/Medium/Large), 없으면 공란(false_positive)
+- `box_area_ratio`: 예측이 있으면 예측 박스 면적/이미지 면적, 없으면 공란
+- `near_edge`: GT 또는 예측 박스가 있고 그 박스 경계가 이미지 가장자리에서 5% 이내면 `True`(작업24 미탐 분류 항목 "경계 결함"을 사람이 판단할 때 참고할 객관적 신호일 뿐, 최종 분류는 아님)
+- `duplicate_of_tp`: false_positive인 예측이 이미 매칭된 TP와 같은 클래스이고 IoU≥0.3이면 `True`(작업24 오탐 분류 항목 "중복 예측" 판단 참고용)
 
-- `reports/evaluation/model_performance.csv`(컬럼: `scope, class_name, precision, recall, ap50, ap50_95` — `scope`는 `overall` 1행 + 활성 클래스별 행)
-- `reports/evaluation/object_size_performance.csv`(2번 결과)
-- Confusion Matrix는 `model.val()`이 자동 저장한 파일 경로를 로그로 남긴다(복사만 하고 다시 그리지 않는다).
+#### 4. 산출물
+
+- `errors/{false_positive, false_negative, wrong_class, localization_error}/<이미지스템>_<순번>.jpg`: 원본 이미지에 GT(초록, 있으면)와 Prediction(자홍, 있으면) 박스를 그리고 각각 클래스명(+Prediction은 Confidence)을 표기한 시각화. 이미지 좌상단에 파일명·오류 유형을 표기.
+- `reports/evaluation/error_cases.csv`(컬럼: `case_id, image_name, error_type, gt_class, gt_size_bucket, pred_class, confidence, box_area_ratio, near_edge, duplicate_of_tp, case_image_path`) — 4번 항목의 이미지 경로를 포함해 사람이 파일명으로 바로 찾아갈 수 있게 한다.
+- `reports/evaluation/error_type_counts.csv`(컬럼: `error_type, class_name, count`) — 오류 유형×클래스별 건수 집계(이건 객관적 집계이므로 스크립트가 만든다. "원인별" 통계는 사람이 사례를 보고 판단하는 것이므로 스크립트 범위가 아니다).
 
 ## 구현 범위 (In Scope)
 
-- `src/evaluation/calculate_metrics.py` 신규 작성
-- `reports/evaluation/{model_performance.csv, object_size_performance.csv}` 생성
+- `src/evaluation/collect_error_cases.py` 신규 작성
+- `errors/{false_positive,false_negative,wrong_class,localization_error}/`, `reports/evaluation/{error_cases.csv, error_type_counts.csv}` 생성
 
 ## 구현 제외 범위 (Out of Scope)
 
-- "평가 보고서 초안"(정성적 해석·결론 서술)은 실제 수치를 보고 CLAUDE가 판단해 `experiments/EXP-P1-DET-001/experiment.md`의 "11. 전체·클래스별 성능" 절에 직접 작성한다(이 스크립트는 원시 수치만 만든다).
-- 오탐·미탐 개별 사례 조사(작업24의 범위).
-- 새로운 모델 학습, Threshold 변경(작업22에서 이미 확정한 0.25 고정).
+- `docs/08_error_analysis.md`(정성적 원인 분석·개선 후보 서술) — CLAUDE가 실제 사례 이미지를 검토한 뒤 직접 작성한다.
+- Ground Truth 라벨 자체의 오류 여부 재검증(이미 작업15에서 검증됨) — 이번 작업은 예측·GT 매칭 결과만 다룬다.
+- 새로운 모델 학습·Threshold 변경.
 
 ## 작업 전 확인해야 하는 문서/코드
 
-- `docs/context/02-task-list.md` 작업23
-- `src/model/compare_thresholds.py`(작업22 — `model.val()` Confusion Matrix 재사용 패턴)
-- `src/model/run_inference.py`(작업19 — 개별 이미지 순회 패턴)
-- `src/data/analyze_statistics.py`(작업12 — 객체 크기 버킷 기준 원출처)
-- `data/processed/dataset_v1/labels/test/`, `metadata/yolo_classes.txt`
+- `docs/context/02-task-list.md` 작업24
+- `docs/context/03-deliverables.md` 3.8절, 7.8절
+- `src/evaluation/calculate_metrics.py`(작업23 — GT 로드, IoU 계산, 크기 버킷, 개별 이미지 순회 패턴 재사용)
+- `src/visualization/visualize_yolo_label.py`(GT+Prediction 동시 시각화 패턴 참고)
 
 ## 완료 기준 (Definition of Done)
 
-- `( )` 전체 지표(Precision/Recall/mAP50/mAP50-95)가 저장된다.
-- `( )` 클래스별 지표(Precision/Recall/AP50/AP50-95)가 저장된다.
-- `( )` 객체 크기별(Small/Medium/Large) Recall이 저장된다.
-- `( )` Confusion Matrix 이미지 경로가 로그에 남는다.
+- `( )` 오탐(false_positive)과 미탐(false_negative)이 구분되어 저장된다.
+- `( )` wrong_class(클래스 오류), localization_error(위치 오류)도 별도로 구분된다.
+- `( )` 모든 실패 사례가 이미지와 함께 저장된다(`errors/<유형>/`).
+- `( )` `reports/evaluation/error_cases.csv`, `error_type_counts.csv`가 생성된다.
 - `( )` 코드가 PEP 8 / black 포맷을 따른다(ruff 통과).
 
 ## 제약사항
 
 - `experiments/EXP-P1-DET-001/models/best.pt`, `data/processed/dataset_v1/`은 읽기만 하고 수정하지 않는다.
-- `project=`에는 반드시 절대경로를 사용한다(기존에 반복 확인된 상대경로 버그).
-- 객체 크기별 매칭에 쓰는 `model.predict()`는 반드시 개별 이미지 단위로 호출한다(multi-label 평가 방식과 섞이지 않도록, 작업22에서 확인한 차이를 반영).
-- 이 스크립트는 CODEX 샌드박스에서 직접 실행·검증할 수 없다(Python 실행 불가). 코드 작성까지만 CODEX가 담당하고, 실제 실행·결과 확인은 CLAUDE가 `venv/Scripts/python.exe`로 수행한다.
+- 이미지 읽기/쓰기는 기존 시각화 스크립트와 동일하게 Unicode 안전 방식(`common.image_utils.read_image`, `cv2.imencode`+`write_bytes`)을 쓴다.
+- `errors/`는 프로젝트 루트 최상위에 생성한다(`docs/context/02-task-list.md`·`03-deliverables.md`가 명시한 폴더 구조).
+- 이 스크립트는 CODEX 샌드박스에서 직접 실행·검증할 수 없다(Python 실행 불가). 코드 작성까지만 CODEX가 담당하고, 실제 실행·결과 확인 및 `docs/08_error_analysis.md` 작성은 CLAUDE가 수행한다.
 
 ## 테스트 방법
 
-1. `venv/Scripts/python.exe src/evaluation/calculate_metrics.py` 실행
-2. `reports/evaluation/model_performance.csv` — `overall` 행 + 활성 클래스(porosity, slag_inclusion) 행 확인
-3. `reports/evaluation/object_size_performance.csv` — Small/Medium/Large 3행, `gt_count` 합이 58(Test 전체 객체 수)과 같은지 확인
-4. 로그에서 Confusion Matrix 이미지 경로 확인
-5. `black --check src/evaluation/calculate_metrics.py`, `ruff check src/evaluation/calculate_metrics.py` 통과 확인
+1. `venv/Scripts/python.exe src/evaluation/collect_error_cases.py` 실행
+2. `reports/evaluation/error_type_counts.csv` — `false_negative` 합이 45(작업23에서 확인한 미탐 수)와 대략 일치하는지 확인(localization_error로 일부 재분류되면 정확히 45는 아닐 수 있음 — 그 경우 왜 그런지 확인)
+3. `errors/false_positive/`, `errors/wrong_class/` — 각각 3장, 1장 내외 존재 확인(작업23에서 확인한 배경 오탐 3건, 클래스 오류 1건)
+4. 시각화 이미지 하나를 열어 GT·Prediction 박스와 라벨이 올바르게 표시되는지 육안 확인
+5. `black --check src/evaluation/collect_error_cases.py`, `ruff check src/evaluation/collect_error_cases.py` 통과 확인

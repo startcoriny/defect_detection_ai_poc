@@ -1,0 +1,6 @@
+error_type,class_name,count
+false_negative,porosity,23
+false_negative,slag_inclusion,25
+false_positive,porosity,1
+false_positive,slag_inclusion,2
+localization_error,porosity,2

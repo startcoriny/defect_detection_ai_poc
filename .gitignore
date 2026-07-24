@@ -33,6 +33,9 @@ predictions/
 auto-labels/
 outputs/
 
+# Ultralytics model.val() 원본 출력(PR curve 등 용량 큰 이미지, CSV/리포트는 reports/evaluation/*.csv로 별도 보존)
+reports/evaluation/evaluation/
+
 # 환경 변수 / 민감 정보
 .env
 *.local

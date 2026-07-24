@@ -221,7 +221,7 @@ def main() -> None:
         level=logging.INFO,
         format="%(asctime)s [%(levelname)s] %(message)s",
     )
-    project_root = Path(__file__).resolve().parents[2]
+    project_root = Path(__file__).resolve().parents[3]
     report_path = project_root / "reports" / "evaluation" / "threshold_comparison.csv"
     rows = compare_thresholds(project_root)
     write_comparison_csv(report_path, rows)

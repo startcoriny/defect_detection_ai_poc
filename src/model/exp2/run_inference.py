@@ -11,10 +11,10 @@ from typing import Any
 from ultralytics import YOLO
 
 LOGGER = logging.getLogger(__name__)
-EXPERIMENT_ID = "EXP-P1-DET-001"
+EXPERIMENT_ID = "EXP-P1-DET-002"
 CONFIDENCE_THRESHOLD = 0.25
 IOU_THRESHOLD = 0.70
-IMAGE_SIZE = 640
+IMAGE_SIZE = 960
 DEVICE = "cpu"
 IMAGE_SUFFIXES = {".bmp", ".jpeg", ".jpg", ".png", ".tif", ".tiff", ".webp"}
 
@@ -138,7 +138,9 @@ def run_inference(project_root: Path) -> dict[str, Any]:
     image_paths = load_test_images(
         project_root / "data" / "processed" / "dataset_v1" / "images" / "test"
     )
-    prediction_project = (project_root / "outputs" / "predictions").resolve()
+    prediction_project = (
+        project_root / "outputs" / EXPERIMENT_ID / "predictions"
+    ).resolve()
     model = YOLO(str(model_path))
 
     images: list[dict[str, Any]] = []
@@ -237,9 +239,11 @@ def run_inference(project_root: Path) -> dict[str, Any]:
 
 def main() -> None:
     """프로젝트 경로를 설정하고 Test 추론 결과를 파일로 저장한다."""
-    project_root = Path(__file__).resolve().parents[2]
-    output_dir = (project_root / "outputs" / "predictions").resolve()
-    result_path = project_root / "predictions" / "prediction_results.json"
+    project_root = Path(__file__).resolve().parents[3]
+    output_dir = (project_root / "outputs" / EXPERIMENT_ID / "predictions").resolve()
+    result_path = (
+        project_root / "predictions" / EXPERIMENT_ID / "prediction_results.json"
+    )
     configure_logging(output_dir)
 
     try:

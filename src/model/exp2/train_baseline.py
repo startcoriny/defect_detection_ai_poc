@@ -15,8 +15,8 @@ import yaml
 from ultralytics import YOLO
 
 LOGGER = logging.getLogger(__name__)
-EXPERIMENT_ID = "EXP-P1-DET-001"
-EXPERIMENT_NAME = "RT_AL_YOLO26N_640_Baseline"
+EXPERIMENT_ID = "EXP-P1-DET-002"
+EXPERIMENT_NAME = "RT_AL_YOLO26N_960_ImgszUp"
 METRIC_COLUMNS = {
     "precision": "metrics/precision(B)",
     "recall": "metrics/recall(B)",
@@ -285,7 +285,7 @@ def build_experiment_data(
         "training": {
             "epochs": 50,
             "patience": 15,
-            "imgsz": 640,
+            "imgsz": 960,
             "requested_batch": -1,
             "actual_batch": actual_batch,
             "optimizer": "auto",
@@ -582,7 +582,7 @@ Best epoch loss:
 
 def main() -> None:
     """Baseline 학습부터 산출물 복사와 실험 기록까지 순서대로 실행한다."""
-    project_root = Path(__file__).resolve().parents[2]
+    project_root = Path(__file__).resolve().parents[3]
     experiment_dir = project_root / "experiments" / EXPERIMENT_ID
     runs_dir = (experiment_dir / "runs").resolve()
     run_dir = runs_dir / "train"
@@ -615,7 +615,7 @@ def main() -> None:
             data=str(data_path),
             epochs=50,
             patience=15,
-            imgsz=640,
+            imgsz=960,
             batch=-1,
             device="cpu",
             workers=0,

@@ -14,13 +14,13 @@ import cv2
 import numpy as np
 from ultralytics import YOLO
 
-PROJECT_ROOT = Path(__file__).resolve().parents[2]
+PROJECT_ROOT = Path(__file__).resolve().parents[3]
 SRC_ROOT = PROJECT_ROOT / "src"
 if str(SRC_ROOT) not in sys.path:
     sys.path.insert(0, str(SRC_ROOT))
 
 from common.image_utils import read_image  # noqa: E402
-from evaluation.calculate_metrics import (  # noqa: E402
+from evaluation.exp2.calculate_metrics import (  # noqa: E402
     GroundTruth,
     Prediction,
     calculate_iou,
@@ -34,14 +34,14 @@ from evaluation.calculate_metrics import (  # noqa: E402
 
 LOGGER = logging.getLogger(__name__)
 
-EXPERIMENT_ID = "EXP-P1-DET-001"
+EXPERIMENT_ID = "EXP-P1-DET-002"
 CONFIDENCE_THRESHOLD = 0.25
 NMS_IOU_THRESHOLD = 0.70
 MATCH_IOU_THRESHOLD = 0.5
 LOCALIZATION_IOU_THRESHOLD = 0.1
 DUPLICATE_IOU_THRESHOLD = 0.3
 EDGE_RATIO = 0.05
-IMAGE_SIZE = 640
+IMAGE_SIZE = 960
 DEVICE = "cpu"
 ERROR_TYPES = (
     "false_positive",
@@ -493,8 +493,10 @@ def main() -> int:
         image_paths,
         class_names,
     )
-    error_directories = prepare_error_directories(PROJECT_ROOT / "errors")
-    report_directory = PROJECT_ROOT / "reports" / "evaluation"
+    error_directories = prepare_error_directories(
+        PROJECT_ROOT / "errors" / EXPERIMENT_ID
+    )
+    report_directory = PROJECT_ROOT / "reports" / "evaluation" / EXPERIMENT_ID
 
     LOGGER.info("실패 사례 수집 시작 - model=%s", model_path)
     model = YOLO(str(model_path))

@@ -11,17 +11,19 @@ from pathlib import Path
 from typing import Any
 
 LOGGER = logging.getLogger(__name__)
-MODEL_VERSION = "EXP-P1-DET-001"
+MODEL_VERSION = "EXP-P1-DET-002"
 CONFIDENCE_THRESHOLD = 0.25
 EXPECTED_IMAGE_COUNT = 46
 EXPECTED_CLASS_COUNT = 6
 IMAGE_SUFFIXES = {".bmp", ".jpeg", ".jpg", ".png", ".tif", ".tiff", ".webp"}
 
-PROJECT_ROOT = Path(__file__).resolve().parents[2]
-PREDICTIONS_PATH = PROJECT_ROOT / "predictions" / "prediction_results.json"
+PROJECT_ROOT = Path(__file__).resolve().parents[3]
+PREDICTIONS_PATH = (
+    PROJECT_ROOT / "predictions" / MODEL_VERSION / "prediction_results.json"
+)
 CLASSES_PATH = PROJECT_ROOT / "metadata" / "yolo_classes.txt"
 TEST_IMAGES_DIR = PROJECT_ROOT / "data" / "processed" / "dataset_v1" / "images" / "test"
-OUTPUT_ROOT = PROJECT_ROOT / "auto-labels"
+OUTPUT_ROOT = PROJECT_ROOT / "auto-labels" / MODEL_VERSION
 STAGING_ROOT = PROJECT_ROOT / ".auto-labels-staging"
 
 
@@ -218,7 +220,7 @@ def write_prediction_metadata() -> None:
         "model_version": MODEL_VERSION,
         "confidence_threshold": CONFIDENCE_THRESHOLD,
         "exported_at": now_iso(),
-        "source": "predictions/prediction_results.json",
+        "source": f"predictions/{MODEL_VERSION}/prediction_results.json",
     }
     (metadata_dir / "export_metadata.json").write_text(
         json.dumps(export_metadata, ensure_ascii=False, indent=2) + "\n",

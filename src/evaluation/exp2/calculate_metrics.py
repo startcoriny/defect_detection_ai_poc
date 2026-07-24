@@ -13,11 +13,11 @@ from ultralytics import YOLO
 
 LOGGER = logging.getLogger(__name__)
 
-EXPERIMENT_ID = "EXP-P1-DET-001"
+EXPERIMENT_ID = "EXP-P1-DET-002"
 CONFIDENCE_THRESHOLD = 0.25
 NMS_IOU_THRESHOLD = 0.70
 MATCH_IOU_THRESHOLD = 0.5
-IMAGE_SIZE = 640
+IMAGE_SIZE = 960
 DEVICE = "cpu"
 EXPECTED_IMAGE_COUNT = 46
 SIZE_BUCKETS = ("Small", "Medium", "Large")
@@ -425,7 +425,7 @@ def main() -> int:
         format="%(asctime)s [%(levelname)s] %(message)s",
         stream=sys.stdout,
     )
-    project_root = Path(__file__).resolve().parents[2]
+    project_root = Path(__file__).resolve().parents[3]
     model_path = require_file(
         (project_root / "experiments" / EXPERIMENT_ID / "models" / "best.pt").resolve()
     )
@@ -438,7 +438,7 @@ def main() -> int:
         image_paths,
         class_names,
     )
-    report_dir = (project_root / "reports" / "evaluation").resolve()
+    report_dir = (project_root / "reports" / "evaluation" / EXPERIMENT_ID).resolve()
     report_dir.mkdir(parents=True, exist_ok=True)
 
     model = YOLO(str(model_path))

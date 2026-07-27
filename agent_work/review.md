@@ -1,44 +1,39 @@
-# 코드 리뷰: dataset_v2 구축 스크립트 생성
+# 코드 리뷰: EXP-004 스크립트 생성 (dataset_v2 기반)
 
 ## 요구사항 충족 여부
 
-- `src/dataset/v2/{select_poc_dataset.py, split_dataset.py, build_yolo_dataset.py}`, `src/conversion/v2/{polygon_to_box.py, box_to_yolo.py}` 5개 생성 — 확인
-- 5개 파일 전부 `PROJECT_ROOT`가 `parent.parent.parent.parent`로 수정됨 — `grep`으로 확인
-- `TARGET_COUNT = 1000`(select_poc_dataset.py v2) — 확인
-- 입출력 경로 전부 v2 전용 경로로 분리(`metadata/v2/`, `data/processed/dataset_v2/`, `outputs/{polygon-box-comparison-v2, yolo_labels_v2}/`, `splits/v2/`, `reports/dataset/v2/`) — `diff --strip-trailing-cr`로 원본과 라인 단위 대조해 확인, 지정 외 변경 없음
-- `EXPECTED_STRATUM_COUNTS`(split_dataset.py), `EXPECTED_SPLIT_COUNTS`(build_yolo_dataset.py) 하드코딩 제거 및 로그 대체 — 확인
-- 과거 dataset_v1 비교 문구("이전 group 단독 층화의 train 55.80%...") 제거 — 확인
-- `metadata/class_statistics.csv` 등 공용 산출물 참조는 원본과 동일하게 유지됨 — 확인
-- 기존 원본 5개 스크립트는 `git diff` 결과 변경 없음 — 확인
+- `src/model/exp4/`, `src/evaluation/exp4/`, `src/visualization/exp4/`에 7개 생성 — 확인
+- `EXPERIMENT_ID`/`EXPERIMENT_NAME`/`MODEL_VERSION`, 데이터 경로(`dataset_v1`→`dataset_v2`) 전부 exp2 대비 지정된 대로 치환 — `diff --strip-trailing-cr`로 확인
+- 학습 하이퍼파라미터(imgsz=960, box=7.5, epochs=50, patience=15 등)는 exp2와 완전히 동일 — diff로 확인, 데이터 경로·실험 ID 외 차이 없음
+- black/ruff 전부 통과
 
-## 발견한 문제 및 수정
+## 발견한 문제 및 수정 (CLAUDE가 직접 수정, 스코프 한정)
 
-- `black --check` 결과 `src/conversion/v2/polygon_to_box.py` 1개 파일에서 재포맷 필요(CODEX가 `BBOX_ERRORS_PATH` 대입을 불필요하게 여러 줄로 나눔) — CLAUDE가 `black` 직접 적용해 수정. 그 외 4개 파일은 처음부터 통과.
-- `ruff check` — 5개 파일 전부 처음부터 통과.
+CODEX가 만든 exp4 스크립트에서 exp2 원본에 있던 **dataset_v1 전용 하드코딩 상수**를 두 종류 놓친 것을 발견해 CLAUDE가 직접 고쳤다(둘 다 기계적인 상수 치환이라 CODEX에 재위임하지 않고 바로 수정):
 
-## 실행 결과 (5단계 파이프라인 전체 실행)
+1. **Test 이미지 개수 하드코딩(46 → 84)**: `export_auto_labels.py`의 `EXPECTED_IMAGE_COUNT`, `compare_thresholds.py`의 `TEST_IMAGE_COUNT`, `calculate_metrics.py`의 `EXPECTED_IMAGE_COUNT`, `visualize_prediction.py`의 CVAT 구조 검증(`train_count == 46`, `image_count == 46`, `label_count == 46`, `total_count == 92`)이 dataset_v1의 Test 개수(46)를 그대로 갖고 있었다. dataset_v2의 실제 Test 개수(84, `total_count`는 84+84=168)로 수정. `export_auto_labels.py` 실행 시 `expected=46, actual=84` 오류로 실제로 발견됨.
+2. **`dataset_summary.csv` 생성 경로 버그**: `train_baseline.py`(exp4)가 `reports/dataset/split_distribution.csv`(dataset_v1 경로)를 그대로 복사해 `experiment.md` 5.2·5.3절에 dataset_v1의 수치(Train 332객체 등)가 잘못 기록됐다. `reports/dataset/v2/split_distribution.csv`로 경로를 고치고, 이미 생성된 `dataset_summary.csv`와 `experiment.md` 5.1~5.3절을 실제 dataset_v2 수치로 수동 정정했다. **학습 자체(`model.train(data=...)`)는 처음부터 올바르게 `dataset_v2/data.yaml`을 사용했으므로, 이 버그는 문서화 산출물에만 있었고 모델 성능·평가 결과에는 영향이 없다.**
 
-1. `select_poc_dataset.py` — RT/AL 637장 중 567장 선택(normal 225, porosity 222, slag_inclusion 119, both 1). 제외 70건(non_target_class 68, off_target_class_present 2)은 목표 클래스 외 결함이 섞인 이미지라 정상적인 제외.
-2. `polygon_to_box.py` — 567장 전량 변환 성공, annotations=812, errors=0.
-3. `box_to_yolo.py` — 라벨 567개 생성(선택 이미지 수와 일치). porosity 575개 객체, slag_inclusion 237개 객체.
-4. `split_dataset.py` — 예외 없이 완료. train 398 / val 85 / test 84(70.19%/14.99%/14.81%, 목표 70/15/15와 근접). 작은 객체 비율 범위 3.84%p(상한 24.0%p 이내, dataset_v1보다 오히려 더 균형 잡힘). 모든 분할에 normal·porosity·slag_inclusion 최소 1장 이상 포함 확인.
-5. `build_yolo_dataset.py` — `data/processed/dataset_v2/` 생성 완료, `data.yaml` 검증 통과, 각 분할 이미지·라벨 개수 일치(398/85/84).
+## 실행 결과 (전체 파이프라인)
 
-## dataset_v1 대비 규모 비교
+- 학습: 50 epoch 완주(Early Stopping 미발동), 1.859시간. Best epoch(fitness=mAP50-95 기준) 41(0-index) — 기존 `read_results()`의 `0.1*mAP50+0.9*mAP50-95` 공식으로도 동일 epoch을 가리켜(EXP-001/002와 동일 패턴) 별도 정정 불필요.
+- 추론: Test 84장 전체 성공(84/84)
+- 자동 라벨 export + 라운드트립 검증: PASS(불일치 0건, CVAT 구조 확인)
+- Threshold 비교, 전체 평가(`calculate_metrics.py`), 오류 사례 수집(`collect_error_cases.py`) 정상 실행
 
-| 항목 | dataset_v1 | dataset_v2 |
-| --- | ---: | ---: |
-| 전체 이미지 | 299 | 567 |
-| Train/Val/Test | 209/44/46 | 398/85/84 |
-| porosity 객체 수(전체) | 약 185(train 기준) | 575 |
-| slag_inclusion 객체 수(전체) | 약 147(train 기준) | 237 |
+## 핵심 결과 (EXP-002 대비)
+
+- porosity Recall 0.143→0.298(주 지표, 목표 0.25 이상 충족)
+- Small Recall 0.121→0.241(가드레일 충족)
+- mAP50-95 0.075→0.082(가드레일 충족)
+- slag_inclusion Recall 0.333→0.179(회귀, 클래스별 데이터 증가 비율 불균등 추정 — porosity 약 2.4배 vs slag 약 1.2배)
 
 ## 사용자가 직접 확인하는 방법
 
-1. `diff --strip-trailing-cr src/dataset/select_poc_dataset.py src/dataset/v2/select_poc_dataset.py` 등으로 지정된 변경만 있는지 확인
-2. `cat reports/dataset/v2/split_validation_report.md` — 분할·층화·무결성 검증 결과 확인
-3. `cat data/processed/dataset_v2/data.yaml` — 클래스 매핑·경로 확인
+1. `diff --strip-trailing-cr src/model/exp2/train_baseline.py src/model/exp4/train_baseline.py` — 하이퍼파라미터 외 차이 없는지 확인
+2. `cat experiments/EXP-P1-DET-004/dataset_summary.csv` — dataset_v2 실제 수치(porosity 575, slag_inclusion 237) 확인
+3. `cat reports/evaluation/EXP-P1-DET-004/model_performance.csv` — 전체·클래스별 성능 확인
 
 ## 결과
 
-완료 조건 전부 충족. dataset_v2가 정상적으로 구축됐고, dataset_v1은 전혀 건드리지 않았다.
+완료 조건 전부 충족. 발견된 2건의 하드코딩 버그는 스코프 한정으로 직접 수정했고, 둘 다 모델 성능이 아닌 검증·문서화 로직에 국한된 문제였음을 확인했다.

@@ -358,4 +358,4 @@ Small Recall만 놓고 보면 개선된 것처럼 보인다(0.121→0.182). 그�
 
 # 17. 다음 실험 계획
 
-**차기 실험 제안**: imgsz=960·box=7.5(EXP-002 설정)를 기준으로 유지하고, `docs/08_error_analysis.md`에서 제시했던 후속 우선순위 3번(Hard Negative Mining) 또는 데이터 증강(대비 강조 augmentation)을 다음 변수로 검토한다. 상세 계획서는 필요 시 별도 작성한다.
+**차기 실험 제안**: imgsz=960·box=7.5(EXP-002 설정)를 기준으로 유지한다. Hard Negative Mining(오탐 4건뿐이라 근거 약함)과 대비 강조 증강(새 의존성 필요)을 검토했으나, `docs/context/01-experiment-scope.md` 4.3절의 "데이터 부족 시 처리" 마지막 단계에 따라 **로컬에 이미 보유한 RT/AL 원본 637장 중 미사용분을 추가 투입하는 데이터 확장(dataset_v2)**을 EXP-P1-DET-004로 채택했다. 상세 계획은 `docs/11_next_experiment_plan.md` 참조.

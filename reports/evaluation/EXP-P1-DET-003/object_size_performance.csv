@@ -1,0 +1,4 @@
+size_bucket,gt_count,tp,fn,recall
+Small,33,6,27,0.18181818181818182
+Medium,24,3,21,0.125
+Large,1,0,1,0.0

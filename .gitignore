@@ -26,11 +26,17 @@ experiments/*/models/
 experiments/*/predictions/
 experiments/*/visualizations/
 experiments/*/errors/
+experiments/*/runs/
 
 # 추론 / 자동 라벨 / 시각화 산출물 (재생성 가능)
 predictions/
 auto-labels/
 outputs/
+errors/
+
+# Ultralytics model.val() 원본 출력(PR curve 등 용량 큰 이미지, CSV/리포트는 reports/evaluation/*.csv로 별도 보존)
+reports/evaluation/evaluation/
+reports/evaluation/*/evaluation/
 
 # 환경 변수 / 민감 정보
 .env

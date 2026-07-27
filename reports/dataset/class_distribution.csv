@@ -1,0 +1,7 @@
+class_id,class_name,image_count,object_count
+0,crack,0,0
+1,incomplete_penetration,0,0
+2,lack_of_fusion,0,0
+3,porosity,100,241
+4,slag_inclusion,100,198
+5,undercut,0,0

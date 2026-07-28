@@ -1,44 +1,51 @@
-# 구현 지시서: EXP-005 Threshold 재선정 스크립트 생성
+# 구현 지시서: EXP-006 스크립트 생성 (CLAHE 전처리, dataset_v4)
 
 ## 배경
 
-EXP-P1-DET-005의 `src/model/exp5/compare_thresholds.py`는 이미 `CONFIDENCE_THRESHOLDS = (0.10, 0.25, 0.50, 0.75)` 네 지점만 비교해 `reports/evaluation/EXP-P1-DET-005/threshold_comparison.csv`를 생성·보존하고 있다(재학습 없이 기존 `best.pt`로 평가만 반복하는 스크립트).
+EXP-P1-DET-006은 `docs/13_next_experiment_plan.md`에 따라 dataset_v4(dataset_v3의 모든 이미지에 CLAHE 대비 강조를 적용, Train 482/Val 85/Test 84 — dataset_v3와 장수 동일)를 사용한다. 학습 하이퍼파라미터는 EXP-P1-DET-005(imgsz=960, box=7.5, epochs=50, patience=15)와 완전히 동일하게 유지하고, **데이터셋 경로만** dataset_v4로 바꾼다.
 
-기존 결과를 보면 0.25→0.50 구간에서 Precision(0.561→0.889)과 Recall(0.447→0.130)이 급격히 갈린다. 배포용 운영 threshold를 정하려면 이 구간을 더 세밀하게 스캔해야 한다. 단, exp5는 이미 사용된(리포트가 확정된) 폴더이므로 기존 `compare_thresholds.py`와 그 출력 파일은 절대 덮어쓰지 않는다.
+dataset_v4는 이미 `data/processed/dataset_v4/`에 구축 완료됐다(`src/dataset/v4/apply_clahe.py`로 생성, Train/Val/Test 장수는 dataset_v3와 완전히 동일).
 
 ## 기능 및 요구사항
 
-`src/model/exp5/compare_thresholds.py`를 복사해 같은 폴더에 `src/model/exp5/select_threshold.py`를 새로 만들고 다음만 바꾼다.
+`src/model/exp5/`, `src/evaluation/exp5/`, `src/visualization/exp5/`의 7개 스크립트를 각각 `src/model/exp6/`, `src/evaluation/exp6/`, `src/visualization/exp6/`로 복사하고 다음만 바꾼다.
 
-1. `CONFIDENCE_THRESHOLDS = (0.10, 0.25, 0.50, 0.75)` → `(0.25, 0.30, 0.35, 0.40, 0.45, 0.50)`로 변경. (0.25/0.50은 기존 결과와 대조 검증용으로 재사용, 그 사이 4개 지점을 새로 추가)
-2. `main()`의 `report_path`를 `reports/evaluation/EXP-P1-DET-005/threshold_comparison.csv` → `reports/evaluation/EXP-P1-DET-005/threshold_selection.csv`로 변경 (기존 파일과 충돌 금지).
-3. `compare_thresholds()`의 `metrics_project`, `prediction_project`를 각각 `outputs/EXP-P1-DET-005/threshold-comparison/metrics`, `outputs/EXP-P1-DET-005/threshold-comparison/images` → `outputs/EXP-P1-DET-005/threshold-selection/metrics`, `outputs/EXP-P1-DET-005/threshold-selection/images`로 변경 (기존 폴더와 충돌 금지).
-4. 그 외 로직(모델 경로, 데이터셋 경로 `dataset_v3`, IoU=0.70, imgsz=960, device="cpu" 등)은 전혀 건드리지 않는다.
+1. `EXPERIMENT_ID = "EXP-P1-DET-005"` → `"EXP-P1-DET-006"` (해당되는 모든 파일: `train_baseline.py`, `run_inference.py`, `select_threshold.py`가 있다면 제외하고 `compare_thresholds.py`, `calculate_metrics.py`, `collect_error_cases.py`, `visualize_prediction.py`) — **exp5의 `select_threshold.py`는 exp6로 복사하지 않는다(exp5 전용 추가 분석 파일이라 이번 복사 대상 아님, exp5의 원래 7개 스크립트만 복사)**
+2. `export_auto_labels.py`의 `MODEL_VERSION = "EXP-P1-DET-005"` → `"EXP-P1-DET-006"`
+3. `train_baseline.py`의 `EXPERIMENT_NAME = "RT_AL_YOLO26N_960_SlagOversample"` → `"RT_AL_YOLO26N_960_CLAHE"`
+4. **데이터셋 경로**: 각 스크립트에서 `data/processed/dataset_v3`(또는 `dataset_v3`)를 가리키는 모든 경로/문자열을 `data/processed/dataset_v4`(또는 `dataset_v4`)로 바꾼다. `imgsz=960, box=7.5, epochs=50, patience=15, batch=-1, optimizer="auto", device="cpu"` 등 학습 하이퍼파라미터는 절대 건드리지 않는다.
+5. `train_baseline.py`에서 `reports/dataset/v2/split_distribution.csv`를 참조하는 부분(있다면)은 exp5와 동일하게 **그대로 `reports/dataset/v2/`를 유지한다**(dataset_v4도 Val/Test 구성은 dataset_v2·v3와 동일 — 이미지 픽셀만 CLAHE로 바뀌었을 뿐 분할·장수는 무관하다). Test 이미지 개수 하드코딩(84)도 그대로 유지한다.
+6. 산출물 경로(`predictions/`, `auto-labels/`, `outputs/`, `reports/evaluation/`, `errors/`)에 들어가는 실험 ID 하위 폴더는 1번 변경만으로 자동으로 `EXP-P1-DET-006`이 되도록(exp5와 동일한 구조 유지)
+7. `collect_error_cases.py`(exp6)의 import를 `from evaluation.exp6.calculate_metrics import (...)`로 변경
 
 ## 구현 범위 (In Scope)
 
-- `src/model/exp5/select_threshold.py` 신규 생성 1개 파일
+- `src/model/exp6/`, `src/evaluation/exp6/`, `src/visualization/exp6/`에 7개 스크립트 생성 (exp5의 `select_threshold.py`는 제외)
 
 ## 구현 제외 범위 (Out of Scope)
 
-- `src/model/exp5/compare_thresholds.py` 및 그 출력 파일(`threshold_comparison.csv`, `outputs/EXP-P1-DET-005/threshold-comparison/`) 수정 — 절대 건드리지 않는다
-- exp1~exp4 관련 스크립트 수정
-- 재학습, 새 실험 ID 부여, 데이터셋 변경
-- 스크립트 실행 — CLAUDE가 수행
+- exp1~exp5 스크립트 수정 — 절대 건드리지 않는다
+- `src/dataset/v4/apply_clahe.py` 수정 — 이번 작업 범위 아님(이미 완료됨)
+- 실제 학습·추론 실행 — CLAUDE가 수행
+- `.gitignore`, `docs/*.md` 수정 — 이번 작업 범위 아님
 
 ## 완료 기준 (Definition of Done)
 
-- `( )` `src/model/exp5/select_threshold.py`가 존재하고 `compare_thresholds.py`와 diff 시 threshold 튜플·report_path·project 경로 3곳 외 차이가 없다.
-- `( )` 기존 `src/model/exp5/compare_thresholds.py`와 `reports/evaluation/EXP-P1-DET-005/threshold_comparison.csv`는 변경되지 않았다.
-- `( )` black/ruff 통과.
+- `( )` exp6의 7개 스크립트에 `EXP-P1-DET-005` 잔재가 전혀 없다(`grep -rn "EXP-P1-DET-005" src/*/exp6` 결과 0건).
+- `( )` exp6의 7개 스크립트에 `dataset_v3` 잔재가 전혀 없다(`grep -rn "dataset_v3" src/*/exp6` 결과 0건, 전부 `dataset_v4`로 교체됨). 단 `reports/dataset/v2/`(공용 분할 리포트 참조)는 그대로 유지한다.
+- `( )` Test 이미지 개수 관련 하드코딩 상수가 84로 유지돼 있다(exp5와 동일, 바뀌지 않음).
+- `( )` `train_baseline.py`(exp6)의 `imgsz`, `box` 등 학습 하이퍼파라미터가 exp5와 완전히 동일하다.
+- `( )` exp5와 exp6의 산출물 경로가 겹치지 않는다.
+- `( )` 코드가 PEP 8 / black 포맷을 따른다(ruff 통과).
 
 ## 제약사항
 
-- `compare_thresholds.py`는 읽기만 하고 수정하지 않는다.
+- `src/model/exp5/`, `src/evaluation/exp5/`, `src/visualization/exp5/`는 읽기만 하고 수정하지 않는다.
 - 이 작업은 CODEX 샌드박스에서 Python을 실행해 검증할 수 없다. 코드 작성까지만 CODEX가 담당하고, 실제 실행·검증은 CLAUDE가 수행한다.
 
 ## 테스트 방법 (CLAUDE가 이어서 수행)
 
-1. `diff --strip-trailing-cr src/model/exp5/compare_thresholds.py src/model/exp5/select_threshold.py`로 의도한 3곳 외 차이가 없는지 확인
-2. `black --check src/model/exp5/select_threshold.py`, `ruff check src/model/exp5/select_threshold.py`
-3. `venv/Scripts/python.exe src/model/exp5/select_threshold.py` 실행 후 `reports/evaluation/EXP-P1-DET-005/threshold_selection.csv` 생성 확인
+1. `grep -rn "EXP-P1-DET-005\|EXP-P1-DET-006" src/model/exp6 src/evaluation/exp6 src/visualization/exp6`로 잔재 확인
+2. `grep -rn "dataset_v3\|dataset_v4" src/model/exp6 src/evaluation/exp6 src/visualization/exp6`로 데이터 경로 확인
+3. `diff --strip-trailing-cr src/model/exp5/train_baseline.py src/model/exp6/train_baseline.py`로 하이퍼파라미터 외 변경이 없는지 확인
+4. `black --check`, `ruff check`를 exp6 7개 파일에 실행

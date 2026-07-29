@@ -27,7 +27,7 @@ AI-Hub 용접 검사(RT) 이미지·Polygon 라벨을 YOLO Detection 형식으�
 
 ## 4. 사용 데이터
 
-- 출처: AI-Hub 용접 검사 데이터셋, 원본 JSON 라벨 2,250개 전수 분석(`docs/raw_data_structure.md`). 카테고리 구조 `1. RTAL`/`2. RTST`/`3. VTST` 중 `RTAL`(RT·AL)만 사용.
+- 출처: AI-Hub 용접 검사 데이터셋, 원본 JSON 라벨 2,250개 전수 분석(`docs/reports/raw_data_structure.md`). 카테고리 구조 `1. RTAL`/`2. RTST`/`3. VTST` 중 `RTAL`(RT·AL)만 사용.
 - 원본 클래스 6개와 이미지·객체 수(`metadata/class_statistics.csv`): crack(225장/436개), incomplete_penetration(225/324), lack_of_fusion(452/680), porosity(452/5,179), slag_inclusion(226/463), undercut(225/541). 이 중 porosity·slag_inclusion 2개만 이번 PoC 대상이다.
 - 1차 PoC 선별: 정상 100장 + 불량(porosity·slag_inclusion 포함) 199장 = **299장**(`dataset_v1`, `metadata/selected_dataset.csv` 637건 후보 중 채택). 이후 EXP-004에서 로컬 보유 RT/AL 원본 중 미사용분을 추가 투입해 **567장**(`dataset_v2`)으로 확장했다(`metadata/v2/selected_dataset.csv` 638건 후보 중 채택, 제외 70장).
 - 데이터 부족 시 처리 원칙(`docs/context/01-experiment-scope.md` 4.3절)에 따라 추가 크롤링·외부 데이터 도입 대신 이미 보유한 로컬 원본을 우선 활용했다.
@@ -122,7 +122,7 @@ Test셋 기준 전체·클래스별 성능 추이(주요 실험, Confidence 0.25
 
 ## 13. 오탐·미탐 분석
 
-분류 방법론(`docs/08_error_analysis.md`, `src/evaluation/collect_error_cases.py`): ①같은 클래스+IoU≥0.5=TP → ②남은 예측 중 다른 클래스+IoU≥0.5=**클래스 오류** → ③같은 클래스+0.1≤IoU<0.5=**위치 오류** → ④나머지 예측=**오탐**, 나머지 정답=**미탐**.
+분류 방법론(`docs/reports/08_error_analysis.md`, `src/evaluation/collect_error_cases.py`): ①같은 클래스+IoU≥0.5=TP → ②남은 예측 중 다른 클래스+IoU≥0.5=**클래스 오류** → ③같은 클래스+0.1≤IoU<0.5=**위치 오류** → ④나머지 예측=**오탐**, 나머지 정답=**미탐**.
 
 | 오류 유형 | EXP-001 | EXP-005(최종 채택) | EXP-006 | EXP-007 |
 | --- | ---: | ---: | ---: | ---: |
@@ -161,10 +161,10 @@ EXP-001 초기에는 미탐이 압도적 다수(83%)였다. 데이터 확장·�
 
 ## 참고 문서
 
-- 데이터 분석: `reports/dataset/dataset_analysis_report.md`, `docs/raw_data_structure.md`
+- 데이터 분석: `reports/dataset/dataset_analysis_report.md`, `docs/reports/raw_data_structure.md`
 - 데이터 품질: `reports/data-quality/data_quality_report.csv`
 - 분할 검증: `reports/dataset/split_validation_report.md`
-- 오류 분석 방법론: `docs/08_error_analysis.md`
+- 오류 분석 방법론: `docs/reports/08_error_analysis.md`
 - 실험별 상세 기록: `experiments/EXP-P1-DET-00{1..7}/experiment.md`
-- 실험 설계 문서: `docs/10_next_experiment_plan.md` ~ `docs/14_next_experiment_plan.md`
+- 실험 설계 문서: `docs/decisions/10_next_experiment_plan.md` ~ `docs/decisions/14_next_experiment_plan.md`
 - 완료 기준·범위 정의: `docs/context/00-completion-criteria.md`, `docs/context/01-experiment-scope.md`, `docs/context/03-deliverables.md`

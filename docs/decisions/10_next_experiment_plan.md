@@ -1,7 +1,7 @@
 # 다음 실험 계획서
 
 - 대상: EXP-P1-DET-001(RT_AL_YOLO26N_640_Baseline) 다음 실험, 실험 ID(가안) `EXP-P1-DET-002`
-- 근거 자료: `experiments/EXP-P1-DET-001/experiment.md`(9~14절), `reports/evaluation/*.csv`, `docs/08_error_analysis.md`
+- 근거 자료: `experiments/EXP-P1-DET-001/experiment.md`(9~14절), `reports/evaluation/*.csv`, `docs/reports/08_error_analysis.md`
 
 ## Baseline의 가장 큰 문제
 
@@ -22,7 +22,7 @@
 - 전체 Recall 0.188, 미탐 48/58건(83%) — `reports/evaluation/model_performance.csv`, `error_type_counts.csv`
 - 객체 크기별 Recall: Small(33개) 0.121 < Medium(24개) 0.167 — `reports/evaluation/object_size_performance.csv`
 - 클래스별 Recall: porosity(작은 객체 위주) 0.143 < slag_inclusion(중간 크기 위주) 0.233 — 크기 축과 클래스 축 양쪽에서 같은 방향의 신호(`experiment.md` 11.3~11.4절)
-- 미탐 대표 사례 육안 검토 결과, 검토한 사례 전부 GT 박스 안의 명암 대비가 매우 낮아 사람 눈으로도 식별이 어려운 수준이었음(`docs/08_error_analysis.md`)
+- 미탐 대표 사례 육안 검토 결과, 검토한 사례 전부 GT 박스 안의 명암 대비가 매우 낮아 사람 눈으로도 식별이 어려운 수준이었음(`docs/reports/08_error_analysis.md`)
 - Confidence 분포 자체가 낮게 형성돼 있음(Threshold 0.50 이상에서는 실제 배포 기준 탐지 0건, 작업22) — 모델이 결함의 특징을 약하게만 포착하고 있다는 정황과 일치
 
 ## 원인 가설

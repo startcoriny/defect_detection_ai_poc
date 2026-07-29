@@ -327,7 +327,7 @@ porosity Recall(0.143)은 EXP-001과 완전히 동일하다. slag_inclusion Reca
 | 미탐 건수 | 48 | 42 | -6 |
 | 오탐 건수 | 3 | 4 | +1 |
 
-## 성공 기준 대비 판정 (`docs/10_next_experiment_plan.md` 기준)
+## 성공 기준 대비 판정 (`docs/decisions/10_next_experiment_plan.md` 기준)
 
 | 기준 | 목표 | 실제 결과 | 충족 여부 |
 | --- | --- | --- | --- |

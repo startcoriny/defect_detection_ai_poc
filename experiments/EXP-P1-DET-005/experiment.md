@@ -345,7 +345,7 @@ Threshold를 올릴수록 Precision과 Recall이 거의 1:1로 맞바꿔지는 �
 | porosity Recall(가드레일) | 0.298 | 0.405 | +0.107 |
 | Small Recall | 0.241 | 0.356 | +0.115 |
 
-## 성공 기준 대비 판정 (`docs/12_next_experiment_plan.md` 기준)
+## 성공 기준 대비 판정 (`docs/decisions/12_next_experiment_plan.md` 기준)
 
 | 기준 | 목표 | 실제 결과 | 충족 여부 |
 | --- | --- | --- | --- |
@@ -363,4 +363,4 @@ Threshold를 올릴수록 Precision과 Recall이 거의 1:1로 맞바꿔지는 �
 
 # 17. 다음 실험 계획
 
-**차기 실험 제안**: dataset_v3·imgsz=960을 기준으로 유지한다. Confidence Threshold 재선정은 12.1절에서 완료했고(결론: 0.25 유지), 남은 후보는 `docs/12_next_experiment_plan.md`의 후속 우선순위 2번(CLAHE 대비 강조 증강)·3번(모델 크기 확대) — 5개 실험 내내 미해결인 박스 위치 정밀도 문제를 겨냥한 변수다. 다만 `docs/context/00-completion-criteria.md`·`02-task-list.md` 기준으로 보면 반복 실험 사이클(작업25)은 이미 목표를 충족하는 실험(EXP-005)을 확보했으므로, 추가 실험 없이 작업26(PoC 결과 문서화)으로 넘어가는 것도 함께 검토할 시점이다.
+**차기 실험 제안**: dataset_v3·imgsz=960을 기준으로 유지한다. Confidence Threshold 재선정은 12.1절에서 완료했고(결론: 0.25 유지), 남은 후보는 `docs/decisions/12_next_experiment_plan.md`의 후속 우선순위 2번(CLAHE 대비 강조 증강)·3번(모델 크기 확대) — 5개 실험 내내 미해결인 박스 위치 정밀도 문제를 겨냥한 변수다. 다만 `docs/context/00-completion-criteria.md`·`02-task-list.md` 기준으로 보면 반복 실험 사이클(작업25)은 이미 목표를 충족하는 실험(EXP-005)을 확보했으므로, 추가 실험 없이 작업26(PoC 결과 문서화)으로 넘어가는 것도 함께 검토할 시점이다.

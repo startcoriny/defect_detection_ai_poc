@@ -1,7 +1,7 @@
 # 다음 실험 계획서 (EXP-P1-DET-005)
 
 - 대상: EXP-P1-DET-004(데이터 확장, 성공) 다음 실험, 실험 ID(가안) `EXP-P1-DET-005`
-- 근거 자료: `experiments/EXP-P1-DET-004/experiment.md`(11~17절), `docs/11_next_experiment_plan.md`
+- 근거 자료: `experiments/EXP-P1-DET-004/experiment.md`(11~17절), `docs/decisions/11_next_experiment_plan.md`
 
 ## 지금까지의 성과와 남은 문제
 

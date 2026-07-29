@@ -1,0 +1,506 @@
+2026-07-29 11:07:52,710 [INFO] Test 추론 시작 - model=C:\develop\widep\defect_detection_ai_test\experiments\EXP-P1-DET-005\models\best.pt, images=84, device=cpu
+
+image 1/1 C:\develop\widep\defect_detection_ai_test\data\processed\dataset_v3\images\test\RT_AL_00_14483487.jpg: 320x960 (no detections), 38.7ms
+Speed: 2.2ms preprocess, 38.7ms inference, 0.2ms postprocess per image at shape (1, 3, 320, 960)
+Results saved to [1mC:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test[0m
+37 labels saved to C:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test\labels
+2026-07-29 11:07:52,806 [INFO] Test 이미지 처리 완료 [1/84] - RT_AL_00_14483487.jpg, predictions=0, inference=38.744ms
+
+image 1/1 C:\develop\widep\defect_detection_ai_test\data\processed\dataset_v3\images\test\RT_AL_00_14483491.jpg: 288x960 (no detections), 30.5ms
+Speed: 1.1ms preprocess, 30.5ms inference, 0.2ms postprocess per image at shape (1, 3, 288, 960)
+Results saved to [1mC:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test[0m
+37 labels saved to C:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test\labels
+2026-07-29 11:07:52,855 [INFO] Test 이미지 처리 완료 [2/84] - RT_AL_00_14483491.jpg, predictions=0, inference=30.507ms
+
+image 1/1 C:\develop\widep\defect_detection_ai_test\data\processed\dataset_v3\images\test\RT_AL_00_14483499.jpg: 288x960 (no detections), 19.1ms
+Speed: 1.3ms preprocess, 19.1ms inference, 0.2ms postprocess per image at shape (1, 3, 288, 960)
+Results saved to [1mC:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test[0m
+37 labels saved to C:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test\labels
+2026-07-29 11:07:52,893 [INFO] Test 이미지 처리 완료 [3/84] - RT_AL_00_14483499.jpg, predictions=0, inference=19.087ms
+
+image 1/1 C:\develop\widep\defect_detection_ai_test\data\processed\dataset_v3\images\test\RT_AL_00_14483618.jpg: 320x960 (no detections), 20.4ms
+Speed: 1.5ms preprocess, 20.4ms inference, 0.1ms postprocess per image at shape (1, 3, 320, 960)
+Results saved to [1mC:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test[0m
+37 labels saved to C:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test\labels
+2026-07-29 11:07:52,948 [INFO] Test 이미지 처리 완료 [4/84] - RT_AL_00_14483618.jpg, predictions=0, inference=20.444ms
+
+image 1/1 C:\develop\widep\defect_detection_ai_test\data\processed\dataset_v3\images\test\RT_AL_00_14483628.jpg: 288x960 (no detections), 22.2ms
+Speed: 1.2ms preprocess, 22.2ms inference, 0.1ms postprocess per image at shape (1, 3, 288, 960)
+Results saved to [1mC:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test[0m
+37 labels saved to C:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test\labels
+2026-07-29 11:07:52,990 [INFO] Test 이미지 처리 완료 [5/84] - RT_AL_00_14483628.jpg, predictions=0, inference=22.209ms
+
+image 1/1 C:\develop\widep\defect_detection_ai_test\data\processed\dataset_v3\images\test\RT_AL_00_14483642.jpg: 288x960 (no detections), 19.1ms
+Speed: 1.0ms preprocess, 19.1ms inference, 0.1ms postprocess per image at shape (1, 3, 288, 960)
+Results saved to [1mC:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test[0m
+37 labels saved to C:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test\labels
+2026-07-29 11:07:53,030 [INFO] Test 이미지 처리 완료 [6/84] - RT_AL_00_14483642.jpg, predictions=0, inference=19.122ms
+
+image 1/1 C:\develop\widep\defect_detection_ai_test\data\processed\dataset_v3\images\test\RT_AL_00_14483650.jpg: 288x960 (no detections), 18.7ms
+Speed: 1.1ms preprocess, 18.7ms inference, 0.1ms postprocess per image at shape (1, 3, 288, 960)
+Results saved to [1mC:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test[0m
+37 labels saved to C:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test\labels
+2026-07-29 11:07:53,068 [INFO] Test 이미지 처리 완료 [7/84] - RT_AL_00_14483650.jpg, predictions=0, inference=18.678ms
+
+image 1/1 C:\develop\widep\defect_detection_ai_test\data\processed\dataset_v3\images\test\RT_AL_00_14483727.jpg: 320x960 (no detections), 23.7ms
+Speed: 1.4ms preprocess, 23.7ms inference, 0.1ms postprocess per image at shape (1, 3, 320, 960)
+Results saved to [1mC:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test[0m
+37 labels saved to C:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test\labels
+2026-07-29 11:07:53,122 [INFO] Test 이미지 처리 완료 [8/84] - RT_AL_00_14483727.jpg, predictions=0, inference=23.664ms
+
+image 1/1 C:\develop\widep\defect_detection_ai_test\data\processed\dataset_v3\images\test\RT_AL_00_14483936.jpg: 288x960 (no detections), 22.1ms
+Speed: 1.1ms preprocess, 22.1ms inference, 0.1ms postprocess per image at shape (1, 3, 288, 960)
+Results saved to [1mC:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test[0m
+37 labels saved to C:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test\labels
+2026-07-29 11:07:53,162 [INFO] Test 이미지 처리 완료 [9/84] - RT_AL_00_14483936.jpg, predictions=0, inference=22.092ms
+
+image 1/1 C:\develop\widep\defect_detection_ai_test\data\processed\dataset_v3\images\test\RT_AL_00_14483962.jpg: 288x960 (no detections), 20.1ms
+Speed: 1.2ms preprocess, 20.1ms inference, 0.1ms postprocess per image at shape (1, 3, 288, 960)
+Results saved to [1mC:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test[0m
+37 labels saved to C:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test\labels
+2026-07-29 11:07:53,201 [INFO] Test 이미지 처리 완료 [10/84] - RT_AL_00_14483962.jpg, predictions=0, inference=20.071ms
+
+image 1/1 C:\develop\widep\defect_detection_ai_test\data\processed\dataset_v3\images\test\RT_AL_00_14483964.jpg: 288x960 (no detections), 20.2ms
+Speed: 1.1ms preprocess, 20.2ms inference, 0.1ms postprocess per image at shape (1, 3, 288, 960)
+Results saved to [1mC:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test[0m
+37 labels saved to C:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test\labels
+2026-07-29 11:07:53,240 [INFO] Test 이미지 처리 완료 [11/84] - RT_AL_00_14483964.jpg, predictions=0, inference=20.210ms
+
+image 1/1 C:\develop\widep\defect_detection_ai_test\data\processed\dataset_v3\images\test\RT_AL_00_14483966.jpg: 288x960 (no detections), 20.0ms
+Speed: 1.1ms preprocess, 20.0ms inference, 0.1ms postprocess per image at shape (1, 3, 288, 960)
+Results saved to [1mC:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test[0m
+37 labels saved to C:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test\labels
+2026-07-29 11:07:53,278 [INFO] Test 이미지 처리 완료 [12/84] - RT_AL_00_14483966.jpg, predictions=0, inference=20.027ms
+
+image 1/1 C:\develop\widep\defect_detection_ai_test\data\processed\dataset_v3\images\test\RT_AL_00_14483980.jpg: 288x960 (no detections), 19.9ms
+Speed: 1.2ms preprocess, 19.9ms inference, 0.1ms postprocess per image at shape (1, 3, 288, 960)
+Results saved to [1mC:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test[0m
+37 labels saved to C:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test\labels
+2026-07-29 11:07:53,317 [INFO] Test 이미지 처리 완료 [13/84] - RT_AL_00_14483980.jpg, predictions=0, inference=19.857ms
+
+image 1/1 C:\develop\widep\defect_detection_ai_test\data\processed\dataset_v3\images\test\RT_AL_00_14484027.jpg: 288x960 (no detections), 20.3ms
+Speed: 0.9ms preprocess, 20.3ms inference, 0.1ms postprocess per image at shape (1, 3, 288, 960)
+Results saved to [1mC:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test[0m
+37 labels saved to C:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test\labels
+2026-07-29 11:07:53,355 [INFO] Test 이미지 처리 완료 [14/84] - RT_AL_00_14484027.jpg, predictions=0, inference=20.342ms
+
+image 1/1 C:\develop\widep\defect_detection_ai_test\data\processed\dataset_v3\images\test\RT_AL_00_14484149.jpg: 288x960 (no detections), 20.5ms
+Speed: 1.1ms preprocess, 20.5ms inference, 0.1ms postprocess per image at shape (1, 3, 288, 960)
+Results saved to [1mC:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test[0m
+37 labels saved to C:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test\labels
+2026-07-29 11:07:53,393 [INFO] Test 이미지 처리 완료 [15/84] - RT_AL_00_14484149.jpg, predictions=0, inference=20.458ms
+
+image 1/1 C:\develop\widep\defect_detection_ai_test\data\processed\dataset_v3\images\test\RT_AL_00_14484524.jpg: 288x960 (no detections), 18.8ms
+Speed: 1.4ms preprocess, 18.8ms inference, 0.2ms postprocess per image at shape (1, 3, 288, 960)
+Results saved to [1mC:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test[0m
+37 labels saved to C:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test\labels
+2026-07-29 11:07:53,432 [INFO] Test 이미지 처리 완료 [16/84] - RT_AL_00_14484524.jpg, predictions=0, inference=18.797ms
+
+image 1/1 C:\develop\widep\defect_detection_ai_test\data\processed\dataset_v3\images\test\RT_AL_00_14484533.jpg: 288x960 (no detections), 19.8ms
+Speed: 1.0ms preprocess, 19.8ms inference, 0.1ms postprocess per image at shape (1, 3, 288, 960)
+Results saved to [1mC:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test[0m
+37 labels saved to C:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test\labels
+2026-07-29 11:07:53,468 [INFO] Test 이미지 처리 완료 [17/84] - RT_AL_00_14484533.jpg, predictions=0, inference=19.808ms
+
+image 1/1 C:\develop\widep\defect_detection_ai_test\data\processed\dataset_v3\images\test\RT_AL_00_14484570.jpg: 288x960 (no detections), 19.0ms
+Speed: 1.0ms preprocess, 19.0ms inference, 0.1ms postprocess per image at shape (1, 3, 288, 960)
+Results saved to [1mC:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test[0m
+37 labels saved to C:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test\labels
+2026-07-29 11:07:53,506 [INFO] Test 이미지 처리 완료 [18/84] - RT_AL_00_14484570.jpg, predictions=0, inference=18.983ms
+
+image 1/1 C:\develop\widep\defect_detection_ai_test\data\processed\dataset_v3\images\test\RT_AL_00_14484710.jpg: 320x960 (no detections), 20.8ms
+Speed: 1.5ms preprocess, 20.8ms inference, 0.1ms postprocess per image at shape (1, 3, 320, 960)
+Results saved to [1mC:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test[0m
+37 labels saved to C:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test\labels
+2026-07-29 11:07:53,566 [INFO] Test 이미지 처리 완료 [19/84] - RT_AL_00_14484710.jpg, predictions=0, inference=20.796ms
+
+image 1/1 C:\develop\widep\defect_detection_ai_test\data\processed\dataset_v3\images\test\RT_AL_00_14484792.jpg: 320x960 (no detections), 24.6ms
+Speed: 1.9ms preprocess, 24.6ms inference, 0.1ms postprocess per image at shape (1, 3, 320, 960)
+Results saved to [1mC:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test[0m
+37 labels saved to C:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test\labels
+2026-07-29 11:07:53,623 [INFO] Test 이미지 처리 완료 [20/84] - RT_AL_00_14484792.jpg, predictions=0, inference=24.578ms
+
+image 1/1 C:\develop\widep\defect_detection_ai_test\data\processed\dataset_v3\images\test\RT_AL_00_14484810.jpg: 288x960 (no detections), 22.5ms
+Speed: 1.0ms preprocess, 22.5ms inference, 0.1ms postprocess per image at shape (1, 3, 288, 960)
+Results saved to [1mC:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test[0m
+37 labels saved to C:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test\labels
+2026-07-29 11:07:53,663 [INFO] Test 이미지 처리 완료 [21/84] - RT_AL_00_14484810.jpg, predictions=0, inference=22.539ms
+
+image 1/1 C:\develop\widep\defect_detection_ai_test\data\processed\dataset_v3\images\test\RT_AL_00_14484908.jpg: 288x960 (no detections), 20.1ms
+Speed: 1.2ms preprocess, 20.1ms inference, 0.1ms postprocess per image at shape (1, 3, 288, 960)
+Results saved to [1mC:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test[0m
+37 labels saved to C:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test\labels
+2026-07-29 11:07:53,703 [INFO] Test 이미지 처리 완료 [22/84] - RT_AL_00_14484908.jpg, predictions=0, inference=20.065ms
+
+image 1/1 C:\develop\widep\defect_detection_ai_test\data\processed\dataset_v3\images\test\RT_AL_00_14484982.jpg: 288x960 (no detections), 21.4ms
+Speed: 1.1ms preprocess, 21.4ms inference, 0.2ms postprocess per image at shape (1, 3, 288, 960)
+Results saved to [1mC:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test[0m
+37 labels saved to C:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test\labels
+2026-07-29 11:07:53,742 [INFO] Test 이미지 처리 완료 [23/84] - RT_AL_00_14484982.jpg, predictions=0, inference=21.365ms
+
+image 1/1 C:\develop\widep\defect_detection_ai_test\data\processed\dataset_v3\images\test\RT_AL_00_14485102.jpg: 288x960 (no detections), 21.2ms
+Speed: 1.2ms preprocess, 21.2ms inference, 0.1ms postprocess per image at shape (1, 3, 288, 960)
+Results saved to [1mC:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test[0m
+37 labels saved to C:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test\labels
+2026-07-29 11:07:53,782 [INFO] Test 이미지 처리 완료 [24/84] - RT_AL_00_14485102.jpg, predictions=0, inference=21.200ms
+
+image 1/1 C:\develop\widep\defect_detection_ai_test\data\processed\dataset_v3\images\test\RT_AL_00_14485156.jpg: 288x960 (no detections), 19.1ms
+Speed: 1.2ms preprocess, 19.1ms inference, 0.1ms postprocess per image at shape (1, 3, 288, 960)
+Results saved to [1mC:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test[0m
+37 labels saved to C:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test\labels
+2026-07-29 11:07:53,820 [INFO] Test 이미지 처리 완료 [25/84] - RT_AL_00_14485156.jpg, predictions=0, inference=19.096ms
+
+image 1/1 C:\develop\widep\defect_detection_ai_test\data\processed\dataset_v3\images\test\RT_AL_00_14485219.jpg: 288x960 (no detections), 20.6ms
+Speed: 1.0ms preprocess, 20.6ms inference, 0.1ms postprocess per image at shape (1, 3, 288, 960)
+Results saved to [1mC:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test[0m
+37 labels saved to C:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test\labels
+2026-07-29 11:07:53,861 [INFO] Test 이미지 처리 완료 [26/84] - RT_AL_00_14485219.jpg, predictions=0, inference=20.574ms
+
+image 1/1 C:\develop\widep\defect_detection_ai_test\data\processed\dataset_v3\images\test\RT_AL_00_14485305.jpg: 288x960 (no detections), 20.0ms
+Speed: 1.4ms preprocess, 20.0ms inference, 0.1ms postprocess per image at shape (1, 3, 288, 960)
+Results saved to [1mC:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test[0m
+37 labels saved to C:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test\labels
+2026-07-29 11:07:53,900 [INFO] Test 이미지 처리 완료 [27/84] - RT_AL_00_14485305.jpg, predictions=0, inference=19.952ms
+
+image 1/1 C:\develop\widep\defect_detection_ai_test\data\processed\dataset_v3\images\test\RT_AL_00_14485337.jpg: 288x960 (no detections), 23.2ms
+Speed: 1.2ms preprocess, 23.2ms inference, 0.1ms postprocess per image at shape (1, 3, 288, 960)
+Results saved to [1mC:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test[0m
+37 labels saved to C:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test\labels
+2026-07-29 11:07:53,942 [INFO] Test 이미지 처리 완료 [28/84] - RT_AL_00_14485337.jpg, predictions=0, inference=23.153ms
+
+image 1/1 C:\develop\widep\defect_detection_ai_test\data\processed\dataset_v3\images\test\RT_AL_00_14485415.jpg: 288x960 (no detections), 22.9ms
+Speed: 0.9ms preprocess, 22.9ms inference, 0.1ms postprocess per image at shape (1, 3, 288, 960)
+Results saved to [1mC:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test[0m
+37 labels saved to C:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test\labels
+2026-07-29 11:07:53,982 [INFO] Test 이미지 처리 완료 [29/84] - RT_AL_00_14485415.jpg, predictions=0, inference=22.865ms
+
+image 1/1 C:\develop\widep\defect_detection_ai_test\data\processed\dataset_v3\images\test\RT_AL_00_14485428.jpg: 288x960 (no detections), 20.7ms
+Speed: 1.4ms preprocess, 20.7ms inference, 0.1ms postprocess per image at shape (1, 3, 288, 960)
+Results saved to [1mC:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test[0m
+37 labels saved to C:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test\labels
+2026-07-29 11:07:54,023 [INFO] Test 이미지 처리 완료 [30/84] - RT_AL_00_14485428.jpg, predictions=0, inference=20.663ms
+
+image 1/1 C:\develop\widep\defect_detection_ai_test\data\processed\dataset_v3\images\test\RT_AL_00_14485644.jpg: 288x960 (no detections), 19.7ms
+Speed: 1.0ms preprocess, 19.7ms inference, 0.1ms postprocess per image at shape (1, 3, 288, 960)
+Results saved to [1mC:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test[0m
+37 labels saved to C:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test\labels
+2026-07-29 11:07:54,062 [INFO] Test 이미지 처리 완료 [31/84] - RT_AL_00_14485644.jpg, predictions=0, inference=19.667ms
+
+image 1/1 C:\develop\widep\defect_detection_ai_test\data\processed\dataset_v3\images\test\RT_AL_00_14485704.jpg: 320x960 (no detections), 22.7ms
+Speed: 1.5ms preprocess, 22.7ms inference, 0.1ms postprocess per image at shape (1, 3, 320, 960)
+Results saved to [1mC:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test[0m
+37 labels saved to C:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test\labels
+2026-07-29 11:07:54,114 [INFO] Test 이미지 처리 완료 [32/84] - RT_AL_00_14485704.jpg, predictions=0, inference=22.693ms
+
+image 1/1 C:\develop\widep\defect_detection_ai_test\data\processed\dataset_v3\images\test\RT_AL_00_14485712.jpg: 288x960 (no detections), 20.1ms
+Speed: 1.2ms preprocess, 20.1ms inference, 0.1ms postprocess per image at shape (1, 3, 288, 960)
+Results saved to [1mC:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test[0m
+37 labels saved to C:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test\labels
+2026-07-29 11:07:54,154 [INFO] Test 이미지 처리 완료 [33/84] - RT_AL_00_14485712.jpg, predictions=0, inference=20.073ms
+
+image 1/1 C:\develop\widep\defect_detection_ai_test\data\processed\dataset_v3\images\test\RT_AL_02_14483871.jpg: 288x960 (no detections), 21.7ms
+Speed: 1.0ms preprocess, 21.7ms inference, 0.2ms postprocess per image at shape (1, 3, 288, 960)
+Results saved to [1mC:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test[0m
+37 labels saved to C:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test\labels
+2026-07-29 11:07:54,194 [INFO] Test 이미지 처리 완료 [34/84] - RT_AL_02_14483871.jpg, predictions=0, inference=21.674ms
+
+image 1/1 C:\develop\widep\defect_detection_ai_test\data\processed\dataset_v3\images\test\RT_AL_02_14487790.jpg: 544x960 1 porosity, 47.0ms
+Speed: 2.6ms preprocess, 47.0ms inference, 0.1ms postprocess per image at shape (1, 3, 544, 960)
+Results saved to [1mC:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test[0m
+37 labels saved to C:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test\labels
+2026-07-29 11:07:54,269 [INFO] Test 이미지 처리 완료 [35/84] - RT_AL_02_14487790.jpg, predictions=1, inference=47.032ms
+
+image 1/1 C:\develop\widep\defect_detection_ai_test\data\processed\dataset_v3\images\test\RT_AL_02_14487812.jpg: 544x960 (no detections), 36.6ms
+Speed: 3.0ms preprocess, 36.6ms inference, 0.1ms postprocess per image at shape (1, 3, 544, 960)
+Results saved to [1mC:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test[0m
+37 labels saved to C:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test\labels
+2026-07-29 11:07:54,316 [INFO] Test 이미지 처리 완료 [36/84] - RT_AL_02_14487812.jpg, predictions=0, inference=36.630ms
+
+image 1/1 C:\develop\widep\defect_detection_ai_test\data\processed\dataset_v3\images\test\RT_AL_02_14487829.jpg: 544x960 3 porositys, 33.9ms
+Speed: 2.7ms preprocess, 33.9ms inference, 0.2ms postprocess per image at shape (1, 3, 544, 960)
+Results saved to [1mC:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test[0m
+37 labels saved to C:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test\labels
+2026-07-29 11:07:54,362 [INFO] Test 이미지 처리 완료 [37/84] - RT_AL_02_14487829.jpg, predictions=3, inference=33.910ms
+
+image 1/1 C:\develop\widep\defect_detection_ai_test\data\processed\dataset_v3\images\test\RT_AL_02_14487914.jpg: 544x960 (no detections), 37.9ms
+Speed: 2.7ms preprocess, 37.9ms inference, 0.2ms postprocess per image at shape (1, 3, 544, 960)
+Results saved to [1mC:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test[0m
+37 labels saved to C:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test\labels
+2026-07-29 11:07:54,410 [INFO] Test 이미지 처리 완료 [38/84] - RT_AL_02_14487914.jpg, predictions=0, inference=37.865ms
+
+image 1/1 C:\develop\widep\defect_detection_ai_test\data\processed\dataset_v3\images\test\RT_AL_02_14488023.jpg: 544x960 1 porosity, 32.0ms
+Speed: 2.3ms preprocess, 32.0ms inference, 0.1ms postprocess per image at shape (1, 3, 544, 960)
+Results saved to [1mC:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test[0m
+37 labels saved to C:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test\labels
+2026-07-29 11:07:54,451 [INFO] Test 이미지 처리 완료 [39/84] - RT_AL_02_14488023.jpg, predictions=1, inference=31.963ms
+
+image 1/1 C:\develop\widep\defect_detection_ai_test\data\processed\dataset_v3\images\test\RT_AL_02_14488048.jpg: 544x960 8 porositys, 29.6ms
+Speed: 2.7ms preprocess, 29.6ms inference, 0.2ms postprocess per image at shape (1, 3, 544, 960)
+Results saved to [1mC:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test[0m
+37 labels saved to C:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test\labels
+2026-07-29 11:07:54,492 [INFO] Test 이미지 처리 완료 [40/84] - RT_AL_02_14488048.jpg, predictions=8, inference=29.610ms
+
+image 1/1 C:\develop\widep\defect_detection_ai_test\data\processed\dataset_v3\images\test\RT_AL_02_14488068.jpg: 544x960 (no detections), 34.4ms
+Speed: 3.0ms preprocess, 34.4ms inference, 0.1ms postprocess per image at shape (1, 3, 544, 960)
+Results saved to [1mC:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test[0m
+37 labels saved to C:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test\labels
+2026-07-29 11:07:54,537 [INFO] Test 이미지 처리 완료 [41/84] - RT_AL_02_14488068.jpg, predictions=0, inference=34.376ms
+
+image 1/1 C:\develop\widep\defect_detection_ai_test\data\processed\dataset_v3\images\test\RT_AL_02_14488091.jpg: 544x960 2 porositys, 33.6ms
+Speed: 2.5ms preprocess, 33.6ms inference, 0.2ms postprocess per image at shape (1, 3, 544, 960)
+Results saved to [1mC:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test[0m
+37 labels saved to C:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test\labels
+2026-07-29 11:07:54,585 [INFO] Test 이미지 처리 완료 [42/84] - RT_AL_02_14488091.jpg, predictions=2, inference=33.588ms
+
+image 1/1 C:\develop\widep\defect_detection_ai_test\data\processed\dataset_v3\images\test\RT_AL_02_14488212.jpg: 544x960 (no detections), 36.3ms
+Speed: 2.6ms preprocess, 36.3ms inference, 0.2ms postprocess per image at shape (1, 3, 544, 960)
+Results saved to [1mC:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test[0m
+37 labels saved to C:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test\labels
+2026-07-29 11:07:54,632 [INFO] Test 이미지 처리 완료 [43/84] - RT_AL_02_14488212.jpg, predictions=0, inference=36.258ms
+
+image 1/1 C:\develop\widep\defect_detection_ai_test\data\processed\dataset_v3\images\test\RT_AL_02_14488328.jpg: 544x960 (no detections), 33.3ms
+Speed: 2.7ms preprocess, 33.3ms inference, 0.1ms postprocess per image at shape (1, 3, 544, 960)
+Results saved to [1mC:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test[0m
+37 labels saved to C:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test\labels
+2026-07-29 11:07:54,675 [INFO] Test 이미지 처리 완료 [44/84] - RT_AL_02_14488328.jpg, predictions=0, inference=33.345ms
+
+image 1/1 C:\develop\widep\defect_detection_ai_test\data\processed\dataset_v3\images\test\RT_AL_02_14488384.jpg: 544x960 4 porositys, 32.9ms
+Speed: 2.9ms preprocess, 32.9ms inference, 0.1ms postprocess per image at shape (1, 3, 544, 960)
+Results saved to [1mC:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test[0m
+37 labels saved to C:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test\labels
+2026-07-29 11:07:54,719 [INFO] Test 이미지 처리 완료 [45/84] - RT_AL_02_14488384.jpg, predictions=4, inference=32.896ms
+
+image 1/1 C:\develop\widep\defect_detection_ai_test\data\processed\dataset_v3\images\test\RT_AL_02_14488422.jpg: 544x960 (no detections), 31.9ms
+Speed: 2.4ms preprocess, 31.9ms inference, 0.2ms postprocess per image at shape (1, 3, 544, 960)
+Results saved to [1mC:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test[0m
+37 labels saved to C:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test\labels
+2026-07-29 11:07:54,762 [INFO] Test 이미지 처리 완료 [46/84] - RT_AL_02_14488422.jpg, predictions=0, inference=31.889ms
+
+image 1/1 C:\develop\widep\defect_detection_ai_test\data\processed\dataset_v3\images\test\RT_AL_02_14488432.jpg: 544x960 1 porosity, 32.5ms
+Speed: 2.3ms preprocess, 32.5ms inference, 0.2ms postprocess per image at shape (1, 3, 544, 960)
+Results saved to [1mC:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test[0m
+37 labels saved to C:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test\labels
+2026-07-29 11:07:54,809 [INFO] Test 이미지 처리 완료 [47/84] - RT_AL_02_14488432.jpg, predictions=1, inference=32.500ms
+
+image 1/1 C:\develop\widep\defect_detection_ai_test\data\processed\dataset_v3\images\test\RT_AL_02_14488506.jpg: 544x960 (no detections), 36.3ms
+Speed: 2.4ms preprocess, 36.3ms inference, 0.2ms postprocess per image at shape (1, 3, 544, 960)
+Results saved to [1mC:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test[0m
+37 labels saved to C:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test\labels
+2026-07-29 11:07:54,856 [INFO] Test 이미지 처리 완료 [48/84] - RT_AL_02_14488506.jpg, predictions=0, inference=36.269ms
+
+image 1/1 C:\develop\widep\defect_detection_ai_test\data\processed\dataset_v3\images\test\RT_AL_02_14488600.jpg: 544x960 3 porositys, 31.0ms
+Speed: 2.7ms preprocess, 31.0ms inference, 0.1ms postprocess per image at shape (1, 3, 544, 960)
+Results saved to [1mC:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test[0m
+37 labels saved to C:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test\labels
+2026-07-29 11:07:54,897 [INFO] Test 이미지 처리 완료 [49/84] - RT_AL_02_14488600.jpg, predictions=3, inference=30.993ms
+
+image 1/1 C:\develop\widep\defect_detection_ai_test\data\processed\dataset_v3\images\test\RT_AL_02_14488625.jpg: 544x960 1 porosity, 31.9ms
+Speed: 2.6ms preprocess, 31.9ms inference, 0.1ms postprocess per image at shape (1, 3, 544, 960)
+Results saved to [1mC:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test[0m
+37 labels saved to C:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test\labels
+2026-07-29 11:07:54,941 [INFO] Test 이미지 처리 완료 [50/84] - RT_AL_02_14488625.jpg, predictions=1, inference=31.857ms
+
+image 1/1 C:\develop\widep\defect_detection_ai_test\data\processed\dataset_v3\images\test\RT_AL_02_14488661.jpg: 544x960 (no detections), 33.4ms
+Speed: 2.8ms preprocess, 33.4ms inference, 0.1ms postprocess per image at shape (1, 3, 544, 960)
+Results saved to [1mC:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test[0m
+37 labels saved to C:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test\labels
+2026-07-29 11:07:54,984 [INFO] Test 이미지 처리 완료 [51/84] - RT_AL_02_14488661.jpg, predictions=0, inference=33.405ms
+
+image 1/1 C:\develop\widep\defect_detection_ai_test\data\processed\dataset_v3\images\test\RT_AL_02_14488733.jpg: 544x960 (no detections), 33.5ms
+Speed: 2.5ms preprocess, 33.5ms inference, 0.1ms postprocess per image at shape (1, 3, 544, 960)
+Results saved to [1mC:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test[0m
+37 labels saved to C:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test\labels
+2026-07-29 11:07:55,030 [INFO] Test 이미지 처리 완료 [52/84] - RT_AL_02_14488733.jpg, predictions=0, inference=33.462ms
+
+image 1/1 C:\develop\widep\defect_detection_ai_test\data\processed\dataset_v3\images\test\RT_AL_02_14488967.jpg: 544x960 3 porositys, 35.2ms
+Speed: 2.7ms preprocess, 35.2ms inference, 0.2ms postprocess per image at shape (1, 3, 544, 960)
+Results saved to [1mC:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test[0m
+37 labels saved to C:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test\labels
+2026-07-29 11:07:55,077 [INFO] Test 이미지 처리 완료 [53/84] - RT_AL_02_14488967.jpg, predictions=3, inference=35.236ms
+
+image 1/1 C:\develop\widep\defect_detection_ai_test\data\processed\dataset_v3\images\test\RT_AL_02_14489182.jpg: 544x960 1 porosity, 33.3ms
+Speed: 2.4ms preprocess, 33.3ms inference, 0.2ms postprocess per image at shape (1, 3, 544, 960)
+Results saved to [1mC:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test[0m
+37 labels saved to C:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test\labels
+2026-07-29 11:07:55,121 [INFO] Test 이미지 처리 완료 [54/84] - RT_AL_02_14489182.jpg, predictions=1, inference=33.290ms
+
+image 1/1 C:\develop\widep\defect_detection_ai_test\data\processed\dataset_v3\images\test\RT_AL_02_14489201.jpg: 544x960 4 porositys, 32.9ms
+Speed: 2.7ms preprocess, 32.9ms inference, 0.2ms postprocess per image at shape (1, 3, 544, 960)
+Results saved to [1mC:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test[0m
+37 labels saved to C:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test\labels
+2026-07-29 11:07:55,166 [INFO] Test 이미지 처리 완료 [55/84] - RT_AL_02_14489201.jpg, predictions=4, inference=32.866ms
+
+image 1/1 C:\develop\widep\defect_detection_ai_test\data\processed\dataset_v3\images\test\RT_AL_02_14489269.jpg: 544x960 3 porositys, 39.8ms
+Speed: 2.7ms preprocess, 39.8ms inference, 0.2ms postprocess per image at shape (1, 3, 544, 960)
+Results saved to [1mC:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test[0m
+37 labels saved to C:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test\labels
+2026-07-29 11:07:55,218 [INFO] Test 이미지 처리 완료 [56/84] - RT_AL_02_14489269.jpg, predictions=3, inference=39.827ms
+
+image 1/1 C:\develop\widep\defect_detection_ai_test\data\processed\dataset_v3\images\test\RT_AL_02_14489312.jpg: 544x960 2 porositys, 40.7ms
+Speed: 2.5ms preprocess, 40.7ms inference, 0.2ms postprocess per image at shape (1, 3, 544, 960)
+Results saved to [1mC:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test[0m
+37 labels saved to C:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test\labels
+2026-07-29 11:07:55,271 [INFO] Test 이미지 처리 완료 [57/84] - RT_AL_02_14489312.jpg, predictions=2, inference=40.738ms
+
+image 1/1 C:\develop\widep\defect_detection_ai_test\data\processed\dataset_v3\images\test\RT_AL_02_14489420.jpg: 544x960 5 porositys, 34.7ms
+Speed: 2.3ms preprocess, 34.7ms inference, 0.2ms postprocess per image at shape (1, 3, 544, 960)
+Results saved to [1mC:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test[0m
+37 labels saved to C:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test\labels
+2026-07-29 11:07:55,318 [INFO] Test 이미지 처리 완료 [58/84] - RT_AL_02_14489420.jpg, predictions=5, inference=34.695ms
+
+image 1/1 C:\develop\widep\defect_detection_ai_test\data\processed\dataset_v3\images\test\RT_AL_02_14489481.jpg: 544x960 2 porositys, 32.9ms
+Speed: 3.2ms preprocess, 32.9ms inference, 0.2ms postprocess per image at shape (1, 3, 544, 960)
+Results saved to [1mC:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test[0m
+37 labels saved to C:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test\labels
+2026-07-29 11:07:55,364 [INFO] Test 이미지 처리 완료 [59/84] - RT_AL_02_14489481.jpg, predictions=2, inference=32.877ms
+
+image 1/1 C:\develop\widep\defect_detection_ai_test\data\processed\dataset_v3\images\test\RT_AL_02_14489518.jpg: 544x960 2 porositys, 32.7ms
+Speed: 2.3ms preprocess, 32.7ms inference, 0.1ms postprocess per image at shape (1, 3, 544, 960)
+Results saved to [1mC:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test[0m
+37 labels saved to C:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test\labels
+2026-07-29 11:07:55,407 [INFO] Test 이미지 처리 완료 [60/84] - RT_AL_02_14489518.jpg, predictions=2, inference=32.746ms
+
+image 1/1 C:\develop\widep\defect_detection_ai_test\data\processed\dataset_v3\images\test\RT_AL_02_14489687.jpg: 544x960 1 porosity, 32.8ms
+Speed: 2.4ms preprocess, 32.8ms inference, 0.2ms postprocess per image at shape (1, 3, 544, 960)
+Results saved to [1mC:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test[0m
+37 labels saved to C:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test\labels
+2026-07-29 11:07:55,454 [INFO] Test 이미지 처리 완료 [61/84] - RT_AL_02_14489687.jpg, predictions=1, inference=32.766ms
+
+image 1/1 C:\develop\widep\defect_detection_ai_test\data\processed\dataset_v3\images\test\RT_AL_02_14489691.jpg: 544x960 2 porositys, 35.2ms
+Speed: 2.4ms preprocess, 35.2ms inference, 0.2ms postprocess per image at shape (1, 3, 544, 960)
+Results saved to [1mC:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test[0m
+37 labels saved to C:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test\labels
+2026-07-29 11:07:55,500 [INFO] Test 이미지 처리 완료 [62/84] - RT_AL_02_14489691.jpg, predictions=2, inference=35.204ms
+
+image 1/1 C:\develop\widep\defect_detection_ai_test\data\processed\dataset_v3\images\test\RT_AL_02_14489744.jpg: 544x960 3 porositys, 1 slag_inclusion, 33.2ms
+Speed: 2.6ms preprocess, 33.2ms inference, 0.2ms postprocess per image at shape (1, 3, 544, 960)
+Results saved to [1mC:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test[0m
+37 labels saved to C:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test\labels
+2026-07-29 11:07:55,545 [INFO] Test 이미지 처리 완료 [63/84] - RT_AL_02_14489744.jpg, predictions=4, inference=33.218ms
+
+image 1/1 C:\develop\widep\defect_detection_ai_test\data\processed\dataset_v3\images\test\RT_AL_02_14490164.jpg: 544x960 (no detections), 33.6ms
+Speed: 2.3ms preprocess, 33.6ms inference, 0.2ms postprocess per image at shape (1, 3, 544, 960)
+Results saved to [1mC:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test[0m
+37 labels saved to C:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test\labels
+2026-07-29 11:07:55,589 [INFO] Test 이미지 처리 완료 [64/84] - RT_AL_02_14490164.jpg, predictions=0, inference=33.573ms
+
+image 1/1 C:\develop\widep\defect_detection_ai_test\data\processed\dataset_v3\images\test\RT_AL_02_14490269.jpg: 544x960 2 porositys, 192.7ms
+Speed: 2.6ms preprocess, 192.7ms inference, 0.2ms postprocess per image at shape (1, 3, 544, 960)
+Results saved to [1mC:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test[0m
+37 labels saved to C:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test\labels
+2026-07-29 11:07:55,794 [INFO] Test 이미지 처리 완료 [65/84] - RT_AL_02_14490269.jpg, predictions=2, inference=192.675ms
+
+image 1/1 C:\develop\widep\defect_detection_ai_test\data\processed\dataset_v3\images\test\RT_AL_05_14488639.jpg: 544x960 1 porosity, 50.1ms
+Speed: 2.7ms preprocess, 50.1ms inference, 0.2ms postprocess per image at shape (1, 3, 544, 960)
+Results saved to [1mC:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test[0m
+37 labels saved to C:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test\labels
+2026-07-29 11:07:55,855 [INFO] Test 이미지 처리 완료 [66/84] - RT_AL_05_14488639.jpg, predictions=1, inference=50.073ms
+
+image 1/1 C:\develop\widep\defect_detection_ai_test\data\processed\dataset_v3\images\test\RT_AL_05_14491963.jpg: 544x960 1 porosity, 33.9ms
+Speed: 2.4ms preprocess, 33.9ms inference, 0.2ms postprocess per image at shape (1, 3, 544, 960)
+Results saved to [1mC:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test[0m
+37 labels saved to C:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test\labels
+2026-07-29 11:07:55,901 [INFO] Test 이미지 처리 완료 [67/84] - RT_AL_05_14491963.jpg, predictions=1, inference=33.943ms
+
+image 1/1 C:\develop\widep\defect_detection_ai_test\data\processed\dataset_v3\images\test\RT_AL_05_14491968.jpg: 544x960 5 slag_inclusions, 33.0ms
+Speed: 2.6ms preprocess, 33.0ms inference, 0.2ms postprocess per image at shape (1, 3, 544, 960)
+Results saved to [1mC:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test[0m
+37 labels saved to C:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test\labels
+2026-07-29 11:07:55,946 [INFO] Test 이미지 처리 완료 [68/84] - RT_AL_05_14491968.jpg, predictions=5, inference=32.951ms
+
+image 1/1 C:\develop\widep\defect_detection_ai_test\data\processed\dataset_v3\images\test\RT_AL_05_14492092.jpg: 544x960 (no detections), 34.7ms
+Speed: 2.5ms preprocess, 34.7ms inference, 0.1ms postprocess per image at shape (1, 3, 544, 960)
+Results saved to [1mC:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test[0m
+37 labels saved to C:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test\labels
+2026-07-29 11:07:55,990 [INFO] Test 이미지 처리 완료 [69/84] - RT_AL_05_14492092.jpg, predictions=0, inference=34.659ms
+
+image 1/1 C:\develop\widep\defect_detection_ai_test\data\processed\dataset_v3\images\test\RT_AL_05_14492118.jpg: 544x960 7 slag_inclusions, 38.6ms
+Speed: 2.5ms preprocess, 38.6ms inference, 0.1ms postprocess per image at shape (1, 3, 544, 960)
+Results saved to [1mC:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test[0m
+37 labels saved to C:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test\labels
+2026-07-29 11:07:56,041 [INFO] Test 이미지 처리 완료 [70/84] - RT_AL_05_14492118.jpg, predictions=7, inference=38.645ms
+
+image 1/1 C:\develop\widep\defect_detection_ai_test\data\processed\dataset_v3\images\test\RT_AL_05_14492165.jpg: 544x960 1 slag_inclusion, 34.8ms
+Speed: 2.4ms preprocess, 34.8ms inference, 0.2ms postprocess per image at shape (1, 3, 544, 960)
+Results saved to [1mC:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test[0m
+37 labels saved to C:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test\labels
+2026-07-29 11:07:56,087 [INFO] Test 이미지 처리 완료 [71/84] - RT_AL_05_14492165.jpg, predictions=1, inference=34.753ms
+
+image 1/1 C:\develop\widep\defect_detection_ai_test\data\processed\dataset_v3\images\test\RT_AL_05_14492254.jpg: 544x960 1 slag_inclusion, 34.8ms
+Speed: 2.4ms preprocess, 34.8ms inference, 0.2ms postprocess per image at shape (1, 3, 544, 960)
+Results saved to [1mC:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test[0m
+37 labels saved to C:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test\labels
+2026-07-29 11:07:56,136 [INFO] Test 이미지 처리 완료 [72/84] - RT_AL_05_14492254.jpg, predictions=1, inference=34.823ms
+
+image 1/1 C:\develop\widep\defect_detection_ai_test\data\processed\dataset_v3\images\test\RT_AL_05_14492256.jpg: 544x960 2 slag_inclusions, 36.9ms
+Speed: 2.5ms preprocess, 36.9ms inference, 0.2ms postprocess per image at shape (1, 3, 544, 960)
+Results saved to [1mC:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test[0m
+37 labels saved to C:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test\labels
+2026-07-29 11:07:56,184 [INFO] Test 이미지 처리 완료 [73/84] - RT_AL_05_14492256.jpg, predictions=2, inference=36.916ms
+
+image 1/1 C:\develop\widep\defect_detection_ai_test\data\processed\dataset_v3\images\test\RT_AL_05_14492383.jpg: 544x960 2 slag_inclusions, 33.2ms
+Speed: 2.8ms preprocess, 33.2ms inference, 0.1ms postprocess per image at shape (1, 3, 544, 960)
+Results saved to [1mC:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test[0m
+37 labels saved to C:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test\labels
+2026-07-29 11:07:56,228 [INFO] Test 이미지 처리 완료 [74/84] - RT_AL_05_14492383.jpg, predictions=2, inference=33.188ms
+
+image 1/1 C:\develop\widep\defect_detection_ai_test\data\processed\dataset_v3\images\test\RT_AL_05_14492395.jpg: 544x960 3 slag_inclusions, 35.5ms
+Speed: 2.4ms preprocess, 35.5ms inference, 0.2ms postprocess per image at shape (1, 3, 544, 960)
+Results saved to [1mC:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test[0m
+37 labels saved to C:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test\labels
+2026-07-29 11:07:56,275 [INFO] Test 이미지 처리 완료 [75/84] - RT_AL_05_14492395.jpg, predictions=3, inference=35.509ms
+
+image 1/1 C:\develop\widep\defect_detection_ai_test\data\processed\dataset_v3\images\test\RT_AL_05_14492419.jpg: 544x960 1 slag_inclusion, 35.4ms
+Speed: 2.4ms preprocess, 35.4ms inference, 0.2ms postprocess per image at shape (1, 3, 544, 960)
+Results saved to [1mC:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test[0m
+37 labels saved to C:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test\labels
+2026-07-29 11:07:56,320 [INFO] Test 이미지 처리 완료 [76/84] - RT_AL_05_14492419.jpg, predictions=1, inference=35.368ms
+
+image 1/1 C:\develop\widep\defect_detection_ai_test\data\processed\dataset_v3\images\test\RT_AL_05_14492527.jpg: 544x960 7 slag_inclusions, 33.0ms
+Speed: 2.4ms preprocess, 33.0ms inference, 0.2ms postprocess per image at shape (1, 3, 544, 960)
+Results saved to [1mC:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test[0m
+37 labels saved to C:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test\labels
+2026-07-29 11:07:56,370 [INFO] Test 이미지 처리 완료 [77/84] - RT_AL_05_14492527.jpg, predictions=7, inference=33.022ms
+
+image 1/1 C:\develop\widep\defect_detection_ai_test\data\processed\dataset_v3\images\test\RT_AL_05_14492681.jpg: 544x960 3 slag_inclusions, 35.6ms
+Speed: 2.4ms preprocess, 35.6ms inference, 0.2ms postprocess per image at shape (1, 3, 544, 960)
+Results saved to [1mC:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test[0m
+37 labels saved to C:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test\labels
+2026-07-29 11:07:56,417 [INFO] Test 이미지 처리 완료 [78/84] - RT_AL_05_14492681.jpg, predictions=3, inference=35.620ms
+
+image 1/1 C:\develop\widep\defect_detection_ai_test\data\processed\dataset_v3\images\test\RT_AL_05_14492741.jpg: 544x960 2 slag_inclusions, 33.3ms
+Speed: 2.9ms preprocess, 33.3ms inference, 0.1ms postprocess per image at shape (1, 3, 544, 960)
+Results saved to [1mC:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test[0m
+37 labels saved to C:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test\labels
+2026-07-29 11:07:56,461 [INFO] Test 이미지 처리 완료 [79/84] - RT_AL_05_14492741.jpg, predictions=2, inference=33.347ms
+
+image 1/1 C:\develop\widep\defect_detection_ai_test\data\processed\dataset_v3\images\test\RT_AL_05_14492773.jpg: 544x960 (no detections), 32.9ms
+Speed: 2.3ms preprocess, 32.9ms inference, 0.1ms postprocess per image at shape (1, 3, 544, 960)
+Results saved to [1mC:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test[0m
+37 labels saved to C:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test\labels
+2026-07-29 11:07:56,503 [INFO] Test 이미지 처리 완료 [80/84] - RT_AL_05_14492773.jpg, predictions=0, inference=32.904ms
+
+image 1/1 C:\develop\widep\defect_detection_ai_test\data\processed\dataset_v3\images\test\RT_AL_05_14492845.jpg: 544x960 5 slag_inclusions, 33.0ms
+Speed: 2.6ms preprocess, 33.0ms inference, 0.1ms postprocess per image at shape (1, 3, 544, 960)
+Results saved to [1mC:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test[0m
+37 labels saved to C:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test\labels
+2026-07-29 11:07:56,548 [INFO] Test 이미지 처리 완료 [81/84] - RT_AL_05_14492845.jpg, predictions=5, inference=32.996ms
+
+image 1/1 C:\develop\widep\defect_detection_ai_test\data\processed\dataset_v3\images\test\RT_AL_05_14492954.jpg: 544x960 1 slag_inclusion, 31.6ms
+Speed: 2.4ms preprocess, 31.6ms inference, 0.1ms postprocess per image at shape (1, 3, 544, 960)
+Results saved to [1mC:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test[0m
+37 labels saved to C:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test\labels
+2026-07-29 11:07:56,593 [INFO] Test 이미지 처리 완료 [82/84] - RT_AL_05_14492954.jpg, predictions=1, inference=31.589ms
+
+image 1/1 C:\develop\widep\defect_detection_ai_test\data\processed\dataset_v3\images\test\RT_AL_05_14493074.jpg: 544x960 1 porosity, 34.3ms
+Speed: 2.6ms preprocess, 34.3ms inference, 0.1ms postprocess per image at shape (1, 3, 544, 960)
+Results saved to [1mC:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test[0m
+37 labels saved to C:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test\labels
+2026-07-29 11:07:56,638 [INFO] Test 이미지 처리 완료 [83/84] - RT_AL_05_14493074.jpg, predictions=1, inference=34.291ms
+
+image 1/1 C:\develop\widep\defect_detection_ai_test\data\processed\dataset_v3\images\test\RT_AL_05_14493390.jpg: 544x960 (no detections), 34.1ms
+Speed: 2.4ms preprocess, 34.1ms inference, 0.1ms postprocess per image at shape (1, 3, 544, 960)
+Results saved to [1mC:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test[0m
+37 labels saved to C:\develop\widep\defect_detection_ai_test\outputs\EXP-P1-DET-005\predictions\test\labels
+2026-07-29 11:07:56,682 [INFO] Test 이미지 처리 완료 [84/84] - RT_AL_05_14493390.jpg, predictions=0, inference=34.077ms
+2026-07-29 11:07:56,685 [INFO] Test 추론 완료 - total=84, succeeded=84, failed=0, result=C:\develop\widep\defect_detection_ai_test\predictions\EXP-P1-DET-005\prediction_results.json

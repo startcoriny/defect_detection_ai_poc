@@ -1,35 +1,33 @@
-# 코드 리뷰: EXP-007 스크립트 생성 (모델 크기 확대, yolo26n→yolo26s)
+# 코드 리뷰: 라이브 데모용 GT vs 예측 비교 시각화
+
+시연 시나리오는 `demo/live_demo_script.md`로 분리했다.
 
 ## 요구사항 충족 여부
 
-- `src/model/exp7/`, `src/evaluation/exp7/`, `src/visualization/exp7/`에 7개 생성 — exp5 대비 `EXPERIMENT_ID`/`EXPERIMENT_NAME`, 모델 파일(`yolo26n.pt`→`yolo26s.pt`)만 지정된 대로 치환, 데이터셋 경로(`dataset_v3`)는 그대로 유지. `diff --strip-trailing-cr`로 전체 7개 파일 확인.
-- 학습 하이퍼파라미터(imgsz, box, epochs, patience 등)는 exp5와 완전히 동일 — diff로 확인.
-- black/ruff 전부 통과.
+- `src/visualization/exp5/compare_gt_prediction.py` 신규 작성 — 지시서의 4개 케이스를 `DEMO_CASES` 상수로 하드코딩.
+- GT/예측 파싱은 `visualize_prediction.py`의 `parse_yolo_line`, `restore_box`를 import해 재사용(중복 정의 없음) — 확인 완료.
+- 좌(GT, 초록 `(0,200,0)`)·우(예측, 빨강 `(0,0,255)`) 2패널을 `cv2.hconcat` + 흰색 구분선(4px)으로 연결, 각 패널 상단에 "GT"/"Prediction" 라벨, 전체 상단에 케이스 라벨 배너 — 지시서대로 구현.
+- 누락 데이터(GT 라벨 파일 없음, 예측 레코드 없음, 이미지 읽기 실패)는 에러 로그 후 해당 케이스만 건너뛰고 나머지는 계속 처리 — `process_case`가 `bool` 반환, 예외를 삼키지 않음.
+- `common.image_utils.read_image`, `common.json_utils.load_json` 재사용, 기존 `visualize_prediction.py`·`image_utils.py`·`json_utils.py`는 수정 없음.
 
-## 실행 결과 (전체 파이프라인)
+## 실행 결과 (CLAUDE가 venv로 직접 실행)
 
-- 학습: Early Stopping 발동(patience=15), 39 epoch에서 종료(Best epoch 24), 10:01:26 소요(EXP-005 대비 약 4.6배, GFLOPs 비율과 대략 비례).
-- 추론: Test 84장 전체 성공(84/84)
-- 자동 라벨 export + 라운드트립 검증: PASS
-- Threshold 비교, 전체 평가, 오류 사례 수집 정상 실행
+- `python src/visualization/exp5/compare_gt_prediction.py` → `비교 이미지 생성 완료: 4/4`, 오류 없이 종료(exit 0).
+- `demo/comparison-images/`에 4개 파일 모두 생성 확인.
+- 4개 이미지를 육안으로 전수 확인 — GT·예측 박스 색상, 좌우 배치, 케이스 라벨 배너 모두 의도대로 표시됨. 특히 `RT_AL_05_14492954.jpg`(위치 오류 케이스)는 예측 박스가 GT보다 폭·높이 모두 눈에 띄게 작게 그려지는 모습이 명확히 드러나 최종보고서 13절이 지적한 패턴을 그대로 보여준다.
 
-## 발견한 버그 1건 (EXP-005·006과 동일 패턴)
+## 발견한 이슈 1건 (경미, 리뷰 반영 완료)
 
-- Epoch 번호 표시 버그 재확인 — 이번에도 fitness 신·구 공식이 같은 epoch(24)을 가리켜 9.1절 수치는 정정 불필요, Epoch 번호만 정정(40→39, 25→24).
-- section 5.2/5.3 Train 객체 수 stale 문제도 EXP-005·006과 동일 원인으로 재현, 동일하게 정정(718 = porosity 382 + slag_inclusion 336).
+- 최초 구현본은 `black --check`에서 2건 실패(줄바꿈 스타일, `GT_LABEL_ROOT` 상수와 `label_text` f-string). CODEX에게 포맷 수정만 재요청 → 현재 `black --check`, `ruff check` 모두 통과. 로직 변경 없음(포맷 전후 diff가 개행뿐).
 
-## 핵심 결과: 부분 성공 + 전체 실패가 공존하는 트레이드오프
+## 추가 반영: 출력 경로를 프로젝트 루트 `demo/`로 이동
 
-- 전체 mAP50-95 0.131→0.089(주 지표, **미충족**)
-- slag_inclusion Recall 0.487→0.179(가드레일 미충족, EXP-004 회귀 수준으로 복귀)
-- porosity Recall 0.405→0.321(가드레일 근소 충족)
-- **localization_error 건수 11→5건(보조 지표 충족)** — 정성 평가에서도 EXP-005·006 내내 위치 오류였던 대표 사례가 이번엔 정상 탐지(TP)로 전환됨을 확인
-- 미탐 63→86건(↑↑), 오탐 38→12건(↓↓) — 모델이 애매한 신호에 더 보수적으로 반응하는 쪽으로 이동
+발표용 산출물을 실험 파이프라인 산출물 폴더(`outputs/`)와 분리해 별도 관리하기 위해, `OUTPUT_ROOT`를 `outputs/EXP-P1-DET-005/demo-comparison` → `demo/comparison-images`로 변경(CODEX, 상수 한 줄만 수정, 다른 로직 변경 없음을 diff로 확인). 이후 재실행해 `demo/comparison-images/`에 4개 이미지가 직접 생성됨을 확인했고, black/ruff도 재통과했다. 기존 `outputs/EXP-P1-DET-005/demo-comparison/`는 더 이상 쓰이지 않으므로 삭제했다.
 
-## 원인 추정
+## 추가 반영: 스크립트 자체도 `demo/`로 이동
 
-Val-Test 성능 격차가 EXP-005(0.035) 대비 EXP-007(0.098)에서 약 2.8배 벌어짐 — 모델 용량 확대(파라미터 약 4배)가 Train 482장 규모의 데이터셋에서 과적합을 유발한 것으로 추정. 박스 정밀도 자체는 개선됐지만 그 대가로 전체 Recall이 크게 희생됨.
+이 스크립트는 프로젝트 파이프라인 소스코드가 아니라 시연 전용 도구이므로, `src/visualization/exp5/compare_gt_prediction.py` → `demo/compare_gt_prediction.py`로 위치를 옮겼다(CODEX). 이동 깊이가 4단계(`src/visualization/exp5/`)에서 1단계(`demo/`)로 바뀌어 `PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent.parent` → `.parent.parent`로 수정했고, 나머지 로직(`visualization.exp5.visualize_prediction` import, `OUTPUT_ROOT` 등)은 변경하지 않았다. 이동 후 재실행해 black/ruff 통과와 4개 이미지 생성을 다시 확인했다.
 
-## 결과
+## 결론
 
-`experiment.md`에 부분 성공/전체 실패 트레이드오프로 정직하게 기록. dataset_v3+yolo26n(EXP-005)을 최종 Baseline으로 유지, yolo26s는 미채택. 박스 위치 정밀도의 세 가지 후보(box gain, CLAHE, 모델 크기)를 모두 시도했으므로 작업26(PoC 결과 문서화)으로 진입할 것을 권장.
+4개 데모 이미지 모두 정상 생성·검증 완료. 리허설(전체 라이브 흐름 실행)까지 마쳤고, 결과물은 `demo/`에 정리했다. 시연 시나리오는 `demo/live_demo_script.md` 참고.

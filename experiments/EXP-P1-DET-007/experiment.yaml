@@ -1,0 +1,64 @@
+experiment:
+  id: EXP-P1-DET-007
+  name: RT_AL_YOLO26S_960_SlagOversample
+  status: completed
+  type: detection_training
+  started_at: '2026-07-28T22:05:42+09:00'
+  ended_at: '2026-07-29T08:07:07+09:00'
+  git_commit: 695f820d43064a2e6d033f853acaa7f1ce8b11e3
+purpose:
+  problem: AI-Hub RT·AL 데이터의 YOLO Detection 파이프라인이 정상적으로 학습되는지 검증한다.
+  hypothesis: Polygon을 Bounding Box로 변환한 데이터로 두 결함 클래스를 학습하고 재현 가능한 Baseline 성능을 얻을
+    수 있다.
+  success_criteria: 학습이 정상 종료되고 best/last 모델과 Precision, Recall, mAP 지표가 기록된다.
+dataset:
+  name: ai_hub_welding_rt_al
+  version: dataset_v3
+  inspection_type: RT
+  material: AL
+  classes:
+    3: porosity
+    4: slag_inclusion
+  split:
+    train: 0.7
+    val: 0.15
+    test: 0.15
+    seed: 42
+  image_count:
+    train: 482
+    val: 85
+    test: 84
+model:
+  library: ultralytics
+  task: detect
+  weights: yolo26s.pt
+  pretrained: true
+training:
+  epochs: 50
+  patience: 15
+  imgsz: 960
+  requested_batch: -1
+  actual_batch: 16
+  optimizer: auto
+  device: cpu
+  seed: 42
+  deterministic: true
+inference:
+  confidence: null
+  iou: null
+  imgsz: null
+metrics:
+  precision: 0.56926
+  recall: 0.42387
+  map50: 0.39025
+  map50_95: 0.13745
+artifacts:
+  best_model: C:\develop\widep\defect_detection_ai_test\experiments\EXP-P1-DET-007\models\best.pt
+  last_model: C:\develop\widep\defect_detection_ai_test\experiments\EXP-P1-DET-007\models\last.pt
+  results_directory: C:\develop\widep\defect_detection_ai_test\experiments\EXP-P1-DET-007\runs\train
+  prediction_json: null
+  evaluation_report: null
+conclusion:
+  hypothesis_result: null
+  adopted: false
+  next_experiment: null

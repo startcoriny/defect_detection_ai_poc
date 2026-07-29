@@ -1,38 +1,35 @@
-# 코드 리뷰: EXP-006 스크립트 생성 (dataset_v4 기반, CLAHE 전처리)
+# 코드 리뷰: EXP-007 스크립트 생성 (모델 크기 확대, yolo26n→yolo26s)
 
 ## 요구사항 충족 여부
 
-- `src/dataset/v4/apply_clahe.py` 신규 생성 — Train/Val/Test 전체에 LAB L 채널 CLAHE 적용, 라벨은 `shutil.copy2`로 원본 그대로, split별 파일 구성이 dataset_v3와 정확히 일치하는지 검증. 지시대로 구현 확인.
-- `src/model/exp6/`, `src/evaluation/exp6/`, `src/visualization/exp6/`에 7개 생성 — exp5 대비 `EXPERIMENT_ID`/`EXPERIMENT_NAME`, 데이터 경로(`dataset_v3`→`dataset_v4`) 지정된 대로 치환. `diff --strip-trailing-cr`로 확인.
-- 학습 하이퍼파라미터는 exp5와 완전히 동일 — diff로 확인.
+- `src/model/exp7/`, `src/evaluation/exp7/`, `src/visualization/exp7/`에 7개 생성 — exp5 대비 `EXPERIMENT_ID`/`EXPERIMENT_NAME`, 모델 파일(`yolo26n.pt`→`yolo26s.pt`)만 지정된 대로 치환, 데이터셋 경로(`dataset_v3`)는 그대로 유지. `diff --strip-trailing-cr`로 전체 7개 파일 확인.
+- 학습 하이퍼파라미터(imgsz, box, epochs, patience 등)는 exp5와 완전히 동일 — diff로 확인.
 - black/ruff 전부 통과.
 
 ## 실행 결과 (전체 파이프라인)
 
-- `apply_clahe.py` 실행: Train/Val/Test 전부 dataset_v3와 파일 구성 완전 일치 확인(diff 결과 캐시 파일 외 차이 없음). 표본 이미지 대비(std) 16.1→24.1로 CLAHE 효과 확인.
-- 학습: 50 epoch 완주(Early Stopping 미발동), 2.213시간.
+- 학습: Early Stopping 발동(patience=15), 39 epoch에서 종료(Best epoch 24), 10:01:26 소요(EXP-005 대비 약 4.6배, GFLOPs 비율과 대략 비례).
 - 추론: Test 84장 전체 성공(84/84)
 - 자동 라벨 export + 라운드트립 검증: PASS
 - Threshold 비교, 전체 평가, 오류 사례 수집 정상 실행
 
-## 발견한 버그 1건 (EXP-005와 동일 패턴, CLAUDE가 직접 정정)
+## 발견한 버그 1건 (EXP-005·006과 동일 패턴)
 
-- section 5.2/5.3 Train 객체 수가 dataset_v2(오버샘플링 전) 수치를 그대로 참조 — EXP-005와 동일한 원인(`reports/dataset/v2/split_distribution.csv` 참조 유지가 Val/Test에는 맞지만 Train에는 stale). `oversample_slag.py` 기준 실제 수치(718 = porosity 382 + slag_inclusion 336)로 정정.
-- Epoch 번호 표시 버그(EXP-005에서 발견한 것과 동일) 재확인 — 이번엔 fitness 공식 신·구 버전이 같은 epoch(36)을 가리켜 9.1절 수치는 정정 불필요, Epoch 번호만 정정(51→50, 37→36).
+- Epoch 번호 표시 버그 재확인 — 이번에도 fitness 신·구 공식이 같은 epoch(24)을 가리켜 9.1절 수치는 정정 불필요, Epoch 번호만 정정(40→39, 25→24).
+- section 5.2/5.3 Train 객체 수 stale 문제도 EXP-005·006과 동일 원인으로 재현, 동일하게 정정(718 = porosity 382 + slag_inclusion 336).
 
-## 핵심 결과: CLAHE는 실패 (EXP-005 대비)
+## 핵심 결과: 부분 성공 + 전체 실패가 공존하는 트레이드오프
 
-- 전체 mAP50-95 0.131→0.103(주 지표, **미충족** — 오히려 하락)
-- porosity Recall 0.405→0.262(가드레일 미충족)
-- slag_inclusion Recall 0.487→0.359(가드레일 미충족)
-- localization_error 11→10건(사실상 동일, 겨냥한 문제 미해결 — 정성 평가에서 동일한 "박스 축소" 패턴 재확인)
-- 미탐 63→75건(↑), 오탐 38→28건(↓) — Recall 하락과 일치
+- 전체 mAP50-95 0.131→0.089(주 지표, **미충족**)
+- slag_inclusion Recall 0.487→0.179(가드레일 미충족, EXP-004 회귀 수준으로 복귀)
+- porosity Recall 0.405→0.321(가드레일 근소 충족)
+- **localization_error 건수 11→5건(보조 지표 충족)** — 정성 평가에서도 EXP-005·006 내내 위치 오류였던 대표 사례가 이번엔 정상 탐지(TP)로 전환됨을 확인
+- 미탐 63→86건(↑↑), 오탐 38→12건(↓↓) — 모델이 애매한 신호에 더 보수적으로 반응하는 쪽으로 이동
 
 ## 원인 추정
 
-1. yolo26n 사전학습 가중치가 일반 자연 이미지 통계 기반이라, CLAHE로 데이터셋 전체 픽셀 분포를 바꾸면 전이 학습 효과가 줄어들 수 있다.
-2. CLAHE 자체의 아티팩트 — false_negative 사례(`RT_AL_02_14487914_001`) 확인 결과 인위적인 색조·경계 패턴이 관찰됨.
+Val-Test 성능 격차가 EXP-005(0.035) 대비 EXP-007(0.098)에서 약 2.8배 벌어짐 — 모델 용량 확대(파라미터 약 4배)가 Train 482장 규모의 데이터셋에서 과적합을 유발한 것으로 추정. 박스 정밀도 자체는 개선됐지만 그 대가로 전체 Recall이 크게 희생됨.
 
 ## 결과
 
-`experiment.md`에 실패로 명확히 기록. dataset_v4는 채택하지 않고 dataset_v3(EXP-005)를 최종 Baseline으로 유지. Threshold 재선정(개선 없음)에 이어 CLAHE(퇴보)까지 두 번의 추가 개선 시도가 모두 실패해, 작업26(PoC 결과 문서화)으로 넘어갈 것을 권장.
+`experiment.md`에 부분 성공/전체 실패 트레이드오프로 정직하게 기록. dataset_v3+yolo26n(EXP-005)을 최종 Baseline으로 유지, yolo26s는 미채택. 박스 위치 정밀도의 세 가지 후보(box gain, CLAHE, 모델 크기)를 모두 시도했으므로 작업26(PoC 결과 문서화)으로 진입할 것을 권장.

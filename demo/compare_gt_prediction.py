@@ -1,5 +1,6 @@
 import json
 import logging
+import shutil
 import sys
 from pathlib import Path
 from typing import Any
@@ -28,6 +29,10 @@ PREDICTIONS_PATH = (
 )
 CLASS_NAMES_PATH = PROJECT_ROOT / "metadata" / "yolo_classes.txt"
 OUTPUT_ROOT = PROJECT_ROOT / "demo" / "comparison-images"
+PREDICTION_ONLY_SOURCE_ROOT = (
+    PROJECT_ROOT / "outputs" / EXPERIMENT_ID / "auto-label-visualization"
+)
+PREDICTION_ONLY_OUTPUT_ROOT = PROJECT_ROOT / "demo" / "prediction-only-images"
 
 DEMO_CASES = [
     ("RT_AL_02_14489691.jpg", "성공 사례: porosity 2건 모두 정확히 검출"),
@@ -215,11 +220,25 @@ def save_image(image: np.ndarray, output_path: Path) -> None:
 
 # 단일 데모 케이스의 GT·예측 비교 이미지를 생성합니다.
 def process_case(
+    case_number: int,
     image_name: str,
     case_label: str,
     prediction_records: dict[str, dict[str, Any]],
     class_names: list[str],
 ) -> bool:
+    prediction_only_source = PREDICTION_ONLY_SOURCE_ROOT / image_name
+    prediction_only_output = (
+        PREDICTION_ONLY_OUTPUT_ROOT / f"case{case_number}_{image_name}"
+    )
+    PREDICTION_ONLY_OUTPUT_ROOT.mkdir(parents=True, exist_ok=True)
+    if prediction_only_source.is_file():
+        shutil.copyfile(prediction_only_source, prediction_only_output)
+    else:
+        LOGGER.error(
+            "예측 전용 이미지 파일이 없습니다: %s",
+            prediction_only_source,
+        )
+
     label_path = GT_LABEL_ROOT / f"{Path(image_name).stem}.txt"
     if not label_path.is_file():
         LOGGER.error("GT 라벨 파일이 없습니다: %s", label_path)
@@ -243,7 +262,7 @@ def process_case(
     gt_panel = create_gt_panel(image, gt_labels, class_names)
     prediction_panel = create_prediction_panel(image, predictions)
     comparison = compose_comparison(gt_panel, prediction_panel, case_label)
-    save_image(comparison, OUTPUT_ROOT / image_name)
+    save_image(comparison, OUTPUT_ROOT / f"case{case_number}_{image_name}")
     return True
 
 
@@ -260,12 +279,13 @@ def main() -> int:
         OUTPUT_ROOT.mkdir(parents=True, exist_ok=True)
         success_count = sum(
             process_case(
+                case_number,
                 image_name,
                 case_label,
                 prediction_records,
                 class_names,
             )
-            for image_name, case_label in DEMO_CASES
+            for case_number, (image_name, case_label) in enumerate(DEMO_CASES, start=1)
         )
     except (
         OSError,

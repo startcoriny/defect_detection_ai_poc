@@ -1,0 +1,7 @@
+INFO: CVAT 구조: obj.names=True (6줄), obj.data=True, train.txt=True (84줄)
+INFO: CVAT 구조: obj_train_data 이미지=84, 라벨=84, 전체=168
+INFO: CVAT Import 구조 확인: PASS
+INFO: 대상 이미지 수: 84
+INFO: 시각화 이미지 수: 84
+INFO: 발견된 불일치 건수: 0
+INFO: 전체 통과 여부: PASS

@@ -24,18 +24,19 @@ else
 fi
 
 echo "[3/7] 가상환경 확인"
-if [[ -d "venv" ]]; then
+if [[ -x "venv/bin/python3.13" ]]; then
     echo "기존 venv 가상환경을 사용합니다."
 else
+    if [[ -d "venv" ]]; then
+        echo "기존 venv는 Linux Python 3.13 가상환경이 아니므로 삭제 후 다시 생성합니다."
+        rm -rf venv
+    fi
     python3.13 -m venv venv
 fi
 
 echo "[4/7] CUDA 지원 PyTorch 설치"
-# requirements.txt보다 먼저 설치해야 CPU 전용 wheel로 덮어써지는 상황을 방지할 수 있다.
-venv/bin/python -m pip install \
-    torch==2.13.0 \
-    torchvision==0.28.0 \
-    --index-url "https://download.pytorch.org/whl/${CUDA_TAG}"
+# 해당 CUDA 인덱스의 최신 호환 버전을 requirements.txt보다 먼저 설치한다.
+venv/bin/python -m pip install torch torchvision --index-url "https://download.pytorch.org/whl/${CUDA_TAG}"
 
 echo "[5/7] 나머지 의존성 설치"
 venv/bin/python -m pip install -r requirements.txt

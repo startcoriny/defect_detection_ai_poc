@@ -105,6 +105,25 @@
   - 전체 실행 전 `python src/model/smoke_test.py`(또는 exp8 스크립트를 짧은 epoch로) 먼저 돌려 파이프라인이 정상 동작하는지 확인할 것.
   - `data/processed/dataset_v3/`, `yolo26n.pt`는 프로젝트 폴더를 그대로 복사했다면 이미 포함되어 있어야 한다(별도 다운로드 불필요).
 
+## 추가 버그 수정 (2026-07-29, 실행 중 발견)
+
+`setup_gpu_env.sh`의 "[3/7] 가상환경 확인" 단계가 `[[ -d "venv" ]]`로 디렉터리 존재 여부만 확인한다. 사용자가 프로젝트 폴더 전체를 복사할 때 Windows에서 쓰던 `venv/`(구조가 `venv/Scripts/python.exe`)까지 함께 복사되면서, 이 무효한 venv를 "기존 것"으로 오인해 재사용하고 넘어가 버렸다(`venv/bin/python`이 없어 이후 pip 설치 단계에서 실패).
+
+수정: 디렉터리 존재가 아니라 `venv/bin/python3.13` 실행 파일 존재 여부로 판단하도록 변경한다.
+- `[[ -x "venv/bin/python3.13" ]]`이면 기존 venv 재사용(기존 동작 유지).
+- 아니면서 `venv` 디렉터리가 존재하면(다른 OS에서 복사된 무효한 venv), 이유를 안내하고 `rm -rf venv`로 제거한 뒤 새로 생성한다.
+- `venv` 디렉터리 자체가 없으면 기존처럼 바로 생성한다.
+
+## 추가 버그 수정 2 (2026-07-29, 실행 중 발견)
+
+`setup_gpu_env.sh`의 "[4/7] CUDA 지원 PyTorch 설치" 단계가 `torch==2.13.0 torchvision==0.28.0`으로 버전을 고정하는데, 실제 GPU 서버에서 `--index-url https://download.pytorch.org/whl/cu128`로 설치해보니 해당 인덱스에는 `torch==2.13.0`이 없다(cu128 인덱스는 2.7.0~2.11.0까지만 배포됨). CPU 머신에서 캡처된 `2.13.0`은 CPU 전용 빌드라 CUDA 빌드 인덱스와 버전 커버리지가 다르다.
+
+수정: 버전 고정을 제거하고 해당 `CUDA_TAG` 인덱스의 최신 호환 버전을 설치하도록 바꾼다.
+```
+venv/bin/python -m pip install torch torchvision --index-url "https://download.pytorch.org/whl/${CUDA_TAG}"
+```
+버전 불일치는 문제가 되지 않는다 — `src/model/exp8/train_baseline.py`가 실행 시점 환경(torch 버전 포함)을 그대로 캡처해 `experiment.md`에 기록하므로 실제 설치된 버전이 투명하게 남는다. 주석도 "CPU 캡처값과 동일 버전"이 아니라 "해당 CUDA 인덱스의 최신 호환 버전 설치"로 바꾼다.
+
 ## 제약사항
 
 - `docs/context/03-deliverables.md`의 모듈 구조(실험별 `src/model/expN/`)를 따른다.

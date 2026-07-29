@@ -322,7 +322,7 @@ Precision·mAP50·mAP50-95는 개선됐지만, 전체 Recall은 0.238→0.239로
 | slag_inclusion Recall | 0.333 | 0.179 | -0.154 |
 | Small Recall | 0.121 | 0.241 | +0.120 |
 
-## 성공 기준 대비 판정 (`docs/11_next_experiment_plan.md` 기준)
+## 성공 기준 대비 판정 (`docs/decisions/11_next_experiment_plan.md` 기준)
 
 | 기준 | 목표 | 실제 결과 | 충족 여부 |
 | --- | --- | --- | --- |
@@ -340,4 +340,4 @@ Precision·mAP50·mAP50-95는 개선됐지만, 전체 Recall은 0.238→0.239로
 
 # 17. 다음 실험 계획
 
-**차기 실험 제안**: dataset_v2·imgsz=960·box=7.5를 기준으로 유지한다. slag_inclusion Recall 회귀를 되돌리는 방향(클래스 균형 재검토)과, `docs/11_next_experiment_plan.md`의 후속 우선순위 2번(CLAHE 대비 강조 증강)·3번(모델 크기 확대) 중 하나를 다음 변수로 검토한다. 상세 계획은 필요 시 별도 문서로 작성한다.
+**차기 실험 제안**: dataset_v2·imgsz=960·box=7.5를 기준으로 유지한다. slag_inclusion Recall 회귀를 되돌리는 방향(클래스 균형 재검토)과, `docs/decisions/11_next_experiment_plan.md`의 후속 우선순위 2번(CLAHE 대비 강조 증강)·3번(모델 크기 확대) 중 하나를 다음 변수로 검토한다. 상세 계획은 필요 시 별도 문서로 작성한다.

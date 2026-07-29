@@ -322,7 +322,7 @@ EXP-005의 0.25 기준 결과(Precision 0.561, Recall 0.447, mAP50-95 0.131 — 
 | slag_inclusion Recall | 0.487 | 0.359 | **-0.128** |
 | porosity Recall | 0.405 | 0.262 | **-0.143** |
 
-## 성공 기준 대비 판정 (`docs/13_next_experiment_plan.md` 기준)
+## 성공 기준 대비 판정 (`docs/decisions/13_next_experiment_plan.md` 기준)
 
 | 기준 | 목표 | 실제 결과 | 충족 여부 |
 | --- | --- | --- | --- |

@@ -86,6 +86,6 @@ CODEX 샌드박스는 한글 사용자 경로 문제로 `venv`를 못 읽어 `bl
 - 진행 중인 작업 브랜치가 있으면 그 브랜치에 바로 커밋합니다.
 - 지금 활성 작업 브랜치가 없으면, 워킹 디렉터리에 변경 사항만 남겨두고(커밋하지 않음) 다음 작업 브랜치를 만들 때 그 변경을 함께 커밋합니다.
 
-이 예외는 **AI 전용 프로세스/규칙 문서**에만 해당합니다. `docs/context/`, `docs/data-inventory.md`, `docs/raw_data_structure.md`, `docs/decisions/`, `docs/specs/` 등 프로젝트 자체의 내용(데이터, 설계, 의사결정)을 다루는 문서는 기존 규칙대로 별도 브랜치·PR을 거칩니다.
+이 예외는 **AI 전용 프로세스/규칙 문서**에만 해당합니다. `docs/context/`, `docs/reports/data-inventory.md`, `docs/reports/raw_data_structure.md`, `docs/decisions/`, `docs/specs/` 등 프로젝트 자체의 내용(데이터, 설계, 의사결정)을 다루는 문서는 기존 규칙대로 별도 브랜치·PR을 거칩니다.
 
 이유: `docs/rules/review-agent-rule.md`, `worklog-rules.md` 같은 문서는 지난 세션에서 짧은 시간 안에 여러 번 고쳐야 했는데, 매번 별도 브랜치·PR을 만드는 건 실제 프로젝트 진행과 무관한 오버헤드였다.

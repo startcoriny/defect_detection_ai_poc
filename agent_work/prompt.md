@@ -2,7 +2,7 @@
 
 ## 배경
 
-EXP-P1-DET-007은 `docs/14_next_experiment_plan.md`에 따라 **dataset_v3**(EXP-005가 채택한 최종 Baseline — dataset_v4는 EXP-006에서 실패로 폐기됨)를 그대로 사용하고, 모델만 `yolo26n.pt` → `yolo26s.pt`로 바꾼다. `yolo26s.pt`는 프로젝트 루트에 이미 다운로드돼 있다(10,009,784 파라미터, 22.8 GFLOPs). 학습 하이퍼파라미터는 EXP-P1-DET-005(imgsz=960, box=7.5, epochs=50, patience=15)와 완전히 동일하게 유지한다.
+EXP-P1-DET-007은 `docs/decisions/14_next_experiment_plan.md`에 따라 **dataset_v3**(EXP-005가 채택한 최종 Baseline — dataset_v4는 EXP-006에서 실패로 폐기됨)를 그대로 사용하고, 모델만 `yolo26n.pt` → `yolo26s.pt`로 바꾼다. `yolo26s.pt`는 프로젝트 루트에 이미 다운로드돼 있다(10,009,784 파라미터, 22.8 GFLOPs). 학습 하이퍼파라미터는 EXP-P1-DET-005(imgsz=960, box=7.5, epochs=50, patience=15)와 완전히 동일하게 유지한다.
 
 ## 기능 및 요구사항
 

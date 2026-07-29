@@ -320,7 +320,7 @@ slag_inclusion Recall이 EXP-004 회귀 수준(0.179)까지 다시 떨어졌다 
 | slag_inclusion Recall | 0.487 | 0.179 | **-0.308** |
 | porosity Recall | 0.405 | 0.321 | -0.084 |
 
-## 성공 기준 대비 판정 (`docs/14_next_experiment_plan.md` 기준)
+## 성공 기준 대비 판정 (`docs/decisions/14_next_experiment_plan.md` 기준)
 
 | 기준 | 목표 | 실제 결과 | 충족 여부 |
 | --- | --- | --- | --- |
@@ -339,4 +339,4 @@ slag_inclusion Recall이 EXP-004 회귀 수준(0.179)까지 다시 떨어졌다 
 
 # 17. 다음 실험 계획
 
-`docs/13_next_experiment_plan.md`·`14_next_experiment_plan.md`에서 제시했던 박스 위치 정밀도 후보(box loss gain 확대·CLAHE·모델 크기 확대)를 모두 시도했고, 각각 실패하거나(EXP-003, EXP-006) 부분적 개선과 전체 성능 하락이 공존하는 트레이드오프(EXP-007)로 끝났다. `docs/context/00-completion-criteria.md`·`02-task-list.md` 기준으로 반복 실험 사이클(작업25)은 이번 실험을 마지막으로 마무리하고, **작업26(PoC 결과 문서화)으로 진입한다.** 박스 위치 정밀도 문제는 "데이터 균형·전처리·모델 크기 중 어느 하나만으로는 해결되지 않았고, 더 큰 모델은 과적합 트레이드오프를 동반한다"는 것을 최종 문서에 정직하게 기록한다.
+`docs/decisions/13_next_experiment_plan.md`·`14_next_experiment_plan.md`에서 제시했던 박스 위치 정밀도 후보(box loss gain 확대·CLAHE·모델 크기 확대)를 모두 시도했고, 각각 실패하거나(EXP-003, EXP-006) 부분적 개선과 전체 성능 하락이 공존하는 트레이드오프(EXP-007)로 끝났다. `docs/context/00-completion-criteria.md`·`02-task-list.md` 기준으로 반복 실험 사이클(작업25)은 이번 실험을 마지막으로 마무리하고, **작업26(PoC 결과 문서화)으로 진입한다.** 박스 위치 정밀도 문제는 "데이터 균형·전처리·모델 크기 중 어느 하나만으로는 해결되지 않았고, 더 큰 모델은 과적합 트레이드오프를 동반한다"는 것을 최종 문서에 정직하게 기록한다.

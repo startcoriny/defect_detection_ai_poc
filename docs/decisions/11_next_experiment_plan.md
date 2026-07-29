@@ -1,7 +1,7 @@
 # 다음 실험 계획서 (EXP-P1-DET-004)
 
 - 대상: EXP-P1-DET-003(box loss gain 7.5→15.0, 실패) 다음 실험, 실험 ID(가안) `EXP-P1-DET-004`
-- 근거 자료: `experiments/EXP-P1-DET-003/experiment.md`(11~17절), `docs/08_error_analysis.md`, `docs/10_next_experiment_plan.md`, `docs/context/01-experiment-scope.md` 4.3절, `docs/data-inventory.md`
+- 근거 자료: `experiments/EXP-P1-DET-003/experiment.md`(11~17절), `docs/reports/08_error_analysis.md`, `docs/decisions/10_next_experiment_plan.md`, `docs/context/01-experiment-scope.md` 4.3절, `docs/reports/data-inventory.md`
 
 ## 지금까지의 문제
 

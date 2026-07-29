@@ -125,4 +125,4 @@ x, y가 **별도 배열**이다 (예: `[[x1,y1],[x2,y2],...]` 형태의 좌표�
 
 ## 9. 참고
 
-- 이미지 파일을 코드로 열 때는 `docs/data-inventory.md` 8절에 기록된 대로 `cv2.imread` 대신 `np.fromfile + cv2.imdecode`를 사용해야 한다 (한글 경로 이슈).
+- 이미지 파일을 코드로 열 때는 `docs/reports/data-inventory.md` 8절에 기록된 대로 `cv2.imread` 대신 `np.fromfile + cv2.imdecode`를 사용해야 한다 (한글 경로 이슈).

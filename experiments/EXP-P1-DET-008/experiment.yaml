@@ -1,0 +1,64 @@
+experiment:
+  id: EXP-P1-DET-008
+  name: RT_AL_YOLO26N_960_GPUDeviceComparison
+  status: completed
+  type: detection_training
+  started_at: '2026-07-29T20:24:04+09:00'
+  ended_at: '2026-07-29T20:44:33+09:00'
+  git_commit: 7027cc1d13da9a1a3df1075155f05470d2aa14c4
+purpose:
+  problem: EXP-P1-DET-005와 동일한 dataset_v3, YOLO26n, epochs=50 설정으로 GPU에서 재학습해 CPU
+    대비 학습 속도를 비교한다.
+  hypothesis: device 외 모든 설정이 동일할 때 GPU 학습이 CPU 학습 (EXP-P1-DET-005)보다 유의미하게 빠르게 완료된다.
+  success_criteria: GPU 학습이 정상 종료되고 총 실행 시간이 기록되어 EXP-P1-DET-005와 비교된다.
+dataset:
+  name: ai_hub_welding_rt_al
+  version: dataset_v3
+  inspection_type: RT
+  material: AL
+  classes:
+    3: porosity
+    4: slag_inclusion
+  split:
+    train: 0.7
+    val: 0.15
+    test: 0.15
+    seed: 42
+  image_count:
+    train: 482
+    val: 85
+    test: 84
+model:
+  library: ultralytics
+  task: detect
+  weights: yolo26n.pt
+  pretrained: true
+training:
+  epochs: 50
+  patience: 15
+  imgsz: 960
+  requested_batch: -1
+  actual_batch: 9
+  optimizer: auto
+  device: '0'
+  seed: 42
+  deterministic: true
+inference:
+  confidence: null
+  iou: null
+  imgsz: null
+metrics:
+  precision: 0.59577
+  recall: 0.36532
+  map50: 0.42083
+  map50_95: 0.1717
+artifacts:
+  best_model: /home/widep_ollama/kjm/defect_detection_ai_test/experiments/EXP-P1-DET-008/models/best.pt
+  last_model: /home/widep_ollama/kjm/defect_detection_ai_test/experiments/EXP-P1-DET-008/models/last.pt
+  results_directory: /home/widep_ollama/kjm/defect_detection_ai_test/experiments/EXP-P1-DET-008/runs/train
+  prediction_json: null
+  evaluation_report: null
+conclusion:
+  hypothesis_result: null
+  adopted: false
+  next_experiment: null

@@ -1,0 +1,15 @@
+System Information
+  Python : 3.13.14
+  OS     : Linux-6.8.0-124-generic-x86_64-with-glibc2.35
+  CPU    : x86_64
+  RAM    : 31.01 GiB
+
+Package Versions
+  torch       : 2.11.0+cu128
+  ultralytics : 8.4.110
+
+Compute Device
+  CUDA Available : Yes
+  Device         : GPU
+  GPU            : Tesla T4
+  VRAM           : 14.56 GiB

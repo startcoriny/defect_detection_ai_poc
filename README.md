@@ -92,6 +92,7 @@ Test셋 기준(Confidence 0.25) 주요 실험 성능 추이입니다.
 ```
 ├── main.py                 # 실행 폴더 준비 및 경로 확인용 엔트리
 ├── requirements.txt
+├── setup_gpu_env.sh        # Ubuntu GPU 서버 부트스트랩 스크립트
 ├── configs/environment/    # 환경 정보·패키지 버전 스냅샷
 ├── src/
 │   ├── check_environment.py
@@ -132,7 +133,7 @@ python src/check_environment.py
 python main.py
 ```
 
-Ubuntu GPU 서버용 부트스트랩 스크립트(`setup_gpu_env.sh`)는 드라이버 확인부터 가상환경 생성·CUDA 대응 torch 설치·검증까지 한 번에 처리합니다. 서버의 CUDA 버전에 따라 스크립트 상단 `CUDA_TAG` 값을 조정해야 합니다. 이 스크립트는 `feature/exp009-imgsz-small-object` 브랜치에 있으며 `main`에는 아직 병합되지 않았습니다.
+Ubuntu GPU 서버에서는 [setup_gpu_env.sh](setup_gpu_env.sh)로 드라이버 확인부터 가상환경 생성·CUDA 대응 torch 설치·검증까지 한 번에 처리할 수 있습니다. 서버의 CUDA 버전에 따라 스크립트 상단 `CUDA_TAG` 값을 조정해야 합니다.
 
 원본 데이터는 저장소에 포함되지 않습니다. AI-Hub 용접 검사 데이터셋을 별도로 받아 `data/raw/` 아래에 배치해야 합니다.
 
@@ -201,8 +202,6 @@ python src/visualization/exp5/visualize_prediction.py
 | EXP-P1-DET-009 | imgsz 960 → 1280 | Small Recall도 악화(0.356 → 0.322), 가설 기각·미채택 |
 
 실험별 상세 기록은 `experiments/<실험 ID>/experiment.md`에 있습니다. 기록 양식은 [docs/context/04-experiment-log-template.md](docs/context/04-experiment-log-template.md)를 따릅니다.
-
-EXP-008·009의 기록과 스크립트는 `feature/exp009-imgsz-small-object` 브랜치에 있으며 `main`에는 아직 병합되지 않았습니다.
 
 ## 문서 안내
 
